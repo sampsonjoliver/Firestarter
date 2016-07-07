@@ -1,5 +1,6 @@
 package com.sampsonjoliver.firestarter.views.main
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
@@ -27,6 +28,7 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.insertSorted
+import com.sampsonjoliver.firestarter.views.chat.ChatActivity
 import kotlinx.android.synthetic.main.content_main.*
 
 class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -90,7 +92,9 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
 
     val adapter: HomeRecyclerAdapter? = HomeRecyclerAdapter(LatLng(-37.8148752,144.9623464), object : HomeRecyclerAdapter.OnSessionClickedListener {
         override fun onSessionClicked(session: Session) {
-            // todo launch session chat activity
+            startActivity(Intent(this@HomeActivity, ChatActivity::class.java).apply {
+                putExtra(ChatActivity.EXTRA_SESSION_ID, session.sessionId)
+            })
         }
     })
 
