@@ -16,7 +16,7 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.whenNotEqual
-import kotlinx.android.synthetic.main.activity_session.*
+import kotlinx.android.synthetic.main.activity_chat.*
 
 class ChatActivity : AppCompatActivity() {
     companion object {
@@ -98,7 +98,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     fun attachDataListener(detach: Boolean = false) {
-        val ref = FirebaseService.getReference(References.Sessions)
+        val ref = FirebaseService.getReference(References.Messages)
                 .child(sessionId)
                 .orderByChild("timestamp")
                 .limitToLast(100)
