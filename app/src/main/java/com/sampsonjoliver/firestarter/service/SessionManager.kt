@@ -5,6 +5,10 @@ import android.preference.PreferenceManager
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserInfo
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ServerValue
+import com.google.firebase.database.ValueEventListener
 import com.sampsonjoliver.firestarter.utils.TAG
 
 object SessionManager {
@@ -58,5 +62,41 @@ object SessionManager {
 
     fun clearUserDetails(context: Context) {
         getDefaultPrefs(context).edit().clear().commit()
+    }
+
+    fun registerPresenceObserver(observer: ValueEventListener) {
+        FirebaseService.database.getReference(".info/connected").addValueEventListener(observer)
+    }
+
+    fun deregisterPresenceObserver(observer: ValueEventListener) {
+        FirebaseService.database.getReference(".info/connected").removeEventListener(observer)
+    }
+
+    fun initPresenceTracking(uid: String) {
+        val userConnRef = FirebaseService.database.getReference("${References.Users}/$uid/connections")
+        val userPresenceRef = FirebaseService.database.getReference("${References.Users}/$uid/lastOnline")
+        val connRef = FirebaseService.database.getReference(".info/connected")
+
+        connRef.addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError?) {
+                System.err.println("Listener was cancelled at .info/connected");
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot?) {
+                val connected = snapshot?.getValue(Boolean::class.java) ?: false
+                if (connected) {
+                    // add this device to my connections list
+                    // this value could contain info about the device or a timestamp too
+                    val con = userConnRef.push()
+                    con.setValue(true);
+
+                    // when this device disconnects, remove it
+                    con.onDisconnect().removeValue();
+
+                    // when I disconnect, update the last time I was seen online
+                    userPresenceRef.onDisconnect().setValue(ServerValue.TIMESTAMP);
+                }
+            }
+        })
     }
 }
