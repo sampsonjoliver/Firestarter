@@ -1,9 +1,9 @@
-package com.sampsonjoliver.firestarter
+package com.sampsonjoliver.firestarter.views.login
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
@@ -17,7 +17,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.*
-import com.sampsonjoliver.firestarter.service.SessionManager
+import com.sampsonjoliver.firestarter.FirebaseActivity
+import com.sampsonjoliver.firestarter.LaunchActivity
+import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.utils.IntentUtils
 import com.sampsonjoliver.firestarter.utils.TAG
 import kotlinx.android.synthetic.main.activity_login.*
@@ -25,7 +27,7 @@ import kotlinx.android.synthetic.main.activity_login.*
 /**
  * A login screen that offers login via email/password.
  */
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : FirebaseActivity() {
     val callbackManager: CallbackManager by lazy { CallbackManager.Factory.create() }
     val firebaseAuth: FirebaseAuth by lazy { FirebaseAuth.getInstance() }
 
@@ -58,17 +60,16 @@ class LoginActivity : AppCompatActivity() {
         Log.d(TAG, "google:authFailed: " + connResult.errorMessage)
     }
 
-    val authStateListener: FirebaseAuth.AuthStateListener = FirebaseAuth.AuthStateListener { auth ->
-        val user = auth.currentUser
-        if (user != null) {
-            // User is signed in
-            Log.d(TAG, "onAuthStateChanged:signed_in:" + user.uid);
-            SessionManager.setUserDetails(this@LoginActivity, user)
-            startActivity(Intent(this, MainActivity::class.java))
-        } else {
-            // User is signed out
-            Log.d(TAG, "onAuthStateChanged:signed_out");
-        }
+    override fun onLogin() {
+        applicationContext.startActivity(Intent(this, LaunchActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        })
+    }
+
+    override fun onLogout() {
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,12 +83,10 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        firebaseAuth.addAuthStateListener(authStateListener)
     }
 
     override fun onStop() {
         super.onStop()
-        firebaseAuth.removeAuthStateListener(authStateListener);
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

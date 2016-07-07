@@ -19,17 +19,17 @@
     <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="@string/facebook_app_id"/>
 
     <activity
-        android:name=".LoginActivity"
-        android:label="@string/app_name">
+        android:name=".LaunchActivity"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme.NoActionBar">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
-
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
     <activity
-        android:name=".MainActivity"
-        android:label="@string/title_activity_main"
+        android:name=".views.login.LoginActivity"
+        android:label="@string/app_name"
         android:theme="@style/AppTheme.NoActionBar">
     </activity>
     <activity
