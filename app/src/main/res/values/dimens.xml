@@ -9,26 +9,31 @@
 
   <dimen name="rowInset">12dp</dimen>
 
+  <dimen name="spacingXSmall">2sp</dimen>
   <dimen name="spacingSmall">5sp</dimen>
   <dimen name="spacingMedium">10sp</dimen>
   <dimen name="spacingLarge">15sp</dimen>
 
   <dimen name="text_size_fab">14sp</dimen>
   <dimen name="textSizeTiny">6sp</dimen>
-  <dimen name="textSizeXxxsmall">8sp</dimen>
-  <dimen name="textSizeXxsmall">10sp</dimen>
-  <dimen name="textSizeXsmall">12sp</dimen>
+  <dimen name="textSizeXxxSmall">8sp</dimen>
+  <dimen name="textSizeXxSmall">10sp</dimen>
+  <dimen name="textSizeXSmall">12sp</dimen>
   <dimen name="textSizeSmall">14sp</dimen>
   <dimen name="textSizeMedium">16sp</dimen>
   <dimen name="textSizeLarge">18sp</dimen>
-  <dimen name="textSizeXlarge">20sp</dimen>
-  <dimen name="textSizeXxlarge">24sp</dimen>
-  <dimen name="textSizeXxxlarge">28sp</dimen>
+  <dimen name="textSizeXLarge">20sp</dimen>
+  <dimen name="textSizeXxLarge">24sp</dimen>
+  <dimen name="textSizeXxxLarge">28sp</dimen>
+
+  <dimen name="fontIconSmall">16sp</dimen>
+  <dimen name="fontIconMedium">24sp</dimen>
+  <dimen name="fontIconLarge">32sp</dimen>
 
   <dimen name="circleTiny">20dp</dimen>
-  <dimen name="circleXxxsmall">30dp</dimen>
-  <dimen name="circleXxsmall">35dp</dimen>
-  <dimen name="circleXsmall">42dp</dimen>
+  <dimen name="circleXxxSmall">30dp</dimen>
+  <dimen name="circleXxSmall">35dp</dimen>
+  <dimen name="circleXSmall">42dp</dimen>
   <dimen name="circleSmall">55dp</dimen>
   <dimen name="circleMed">70dp</dimen>
   <dimen name="circleLarge">90dp</dimen>
