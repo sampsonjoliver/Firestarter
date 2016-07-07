@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:fresco="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="horizontal"
+              android:padding="@dimen/rowInset"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content">
+  <com.facebook.drawee.view.SimpleDraweeView
+      android:id="@+id/image"
+      android:layout_width="@dimen/circleMed"
+      android:layout_height="@dimen/circleMed"
+      android:layout_marginRight="@dimen/activity_horizontal_margin"
+      fresco:roundAsCircle="true"
+      fresco:roundingBorderWidth="1dp"
+      fresco:roundingBorderColor="#f00"
+      tools:background="#000"/>
+
+  <RelativeLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center_vertical"
+      >
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        style="@style/Base.TextAppearance.AppCompat.Title"
+        tools:text="Playing live"
+        />
+    <TextView
+        android:id="@+id/subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title"
+        android:layout_marginBottom="@dimen/spacingSmall"
+        android:layout_alignParentLeft="true"
+        style="@style/Base.TextAppearance.AppCompat.Subhead"
+        tools:text="Ben Howard"
+        />
+    <TextView
+        android:id="@+id/distance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/subtitle"
+        android:layout_alignParentLeft="true"
+        style="@style/Base.TextAppearance.AppCompat.Small"
+        tools:text="0.3km away"
+        />
+    <TextView
+        android:id="@+id/time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/distance"
+        android:layout_alignParentRight="true"
+        android:gravity="right"
+        android:layout_alignBottom="@id/distance"
+        style="@style/Base.TextAppearance.AppCompat.Small"
+        tools:text="Ends in 3 hrs"
+        />
+  </RelativeLayout>
+</LinearLayout>
