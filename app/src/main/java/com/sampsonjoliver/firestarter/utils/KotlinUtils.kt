@@ -1,5 +1,6 @@
 package com.sampsonjoliver.firestarter.utils
 
+import android.content.Context
 import android.support.annotation.LayoutRes
 import android.view.LayoutInflater
 import android.view.View
@@ -50,4 +51,17 @@ fun View.setBackgroundResourcePreservePadding(@LayoutRes res: Int) {
     this.setBackgroundResource(res)
     setPadding(padLeft, padTop, padRight, padBottom)
     setPaddingRelative(padStart, padTop, padEnd, padBottom)
+}
+
+fun Context.copyToClipboard(key: String, obj: String) {
+    // Backwards compatible clipboard service
+    val sdk = android.os.Build.VERSION.SDK_INT
+    if (sdk < android.os.Build.VERSION_CODES.HONEYCOMB) {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.text.ClipboardManager
+        clipboard.text = obj
+    } else {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+        val clip = android.content.ClipData.newPlainText(key, obj)
+        clipboard.primaryClip = clip
+    }
 }

@@ -50,6 +50,10 @@ object SessionManager {
 
     fun getUid(context: Context) = getDefaultPrefs(context).getString(PREF_USER_ID, null)
 
+    fun getUserPhotoUrl(context: Context): String {
+        return FirebaseAuth.getInstance().currentUser?.providerData?.find { it.photoUrl?.toString().isNullOrBlank().not() }?.photoUrl?.toString() ?: ""
+    }
+
     fun setUserDetails(context: Context, userInfo: UserInfo) {
         getDefaultPrefs(context).edit()
                 .putString(PREF_USER_ID, userInfo.uid)
