@@ -1,9 +1,13 @@
 package com.sampsonjoliver.firestarter.views.chat
 
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
+import android.view.inputmethod.EditorInfo
+import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -15,58 +19,63 @@ import com.sampsonjoliver.firestarter.service.FirebaseService
 import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
-import com.sampsonjoliver.firestarter.utils.whenNotEqual
-import kotlinx.android.synthetic.main.activity_session.*
+import com.sampsonjoliver.firestarter.utils.copyToClipboard
+import kotlinx.android.synthetic.main.activity_chat.*
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : AppCompatActivity(),
+    MessageRecyclerAdapter.ChatListener,
+    ChildEventListener {
     companion object {
         const val EXTRA_SESSION_ID = "EXTRA_SESSION_ID"
     }
 
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
-    val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(this)) }
+    val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(this), this) }
 
-    val chatListener = object : ChildEventListener {
-        override fun onChildMoved(p0: DataSnapshot?, previousChildName: String?) = Unit
+    override fun onItemInsertedListener() {
+        recycler.smoothScrollToPosition(0)
+    }
 
-        override fun onChildChanged(p0: DataSnapshot?, previousChildName: String?) {
-            Log.w(this.TAG, "onChildChanged: ${p0?.key}")
+    override fun onMessageLongPress(message: Message) {
+        Snackbar.make(messageText, R.string.copied_to_clipboard, Snackbar.LENGTH_SHORT).show()
+        this.copyToClipboard(message.messageId, message.message)
+    }
 
-            val key = p0?.key ?: ""
-            val message = p0?.getValue(Message::class.java)
+    override fun onChildMoved(p0: DataSnapshot?, previousChildName: String?) = Unit
 
-            adapter.messages.indexOfFirst { it.messageId == key }.whenNotEqual(-1) {
-                adapter.messages[it] == message
-                adapter.notifyItemChanged(it)
-            }
+    override fun onChildChanged(p0: DataSnapshot?, previousChildName: String?) {
+        Log.w(this.TAG, "onChildChanged: ${p0?.key}")
+
+        val key = p0?.key ?: ""
+        val message = p0?.getValue(Message::class.java)
+
+        // todo need to update message inside of its message group; this is likely to be an expensive
+        // op with our current data model
+    }
+
+    override fun onChildAdded(p0: DataSnapshot?, previousChildName: String?) {
+        Log.w(this.TAG, "onChildAdded: ${p0?.key}")
+
+        val key = p0?.key ?: ""
+        val message = p0?.getValue(Message::class.java)
+
+        message?.let {
+            adapter.addMessage(message)
         }
+    }
 
-        override fun onChildAdded(p0: DataSnapshot?, previousChildName: String?) {
-            Log.w(this.TAG, "onChildAdded: ${p0?.key}")
+    override fun onChildRemoved(p0: DataSnapshot?) {
+        Log.w(this.TAG, "onChildRemoved: ${p0?.key}")
+        val key = p0?.key ?: ""
 
-            val key = p0?.key ?: ""
-            val message = p0?.getValue(Message::class.java)
+        // todo need to update message inside of its message group; this is likely to be an expensive
+        // op with our current data model
+    }
 
-            message?.let {
-                adapter.messages.add(0, it)
-                adapter.notifyItemInserted(0)
-            }
-        }
-
-        override fun onChildRemoved(p0: DataSnapshot?) {
-            Log.w(this.TAG, "onChildRemoved: ${p0?.key}")
-            val key = p0?.key ?: ""
-
-            adapter.messages.indexOfFirst { it.messageId == key }.whenNotEqual(-1) {
-                adapter.notifyItemChanged(it)
-            }
-        }
-
-        override fun onCancelled(p0: DatabaseError?) {
-            Log.w(this.TAG, "onCancelled", p0?.toException());
-            Toast.makeText(this@ChatActivity, "Failed to load chat.",
-                    Toast.LENGTH_SHORT).show()
-        }
+    override fun onCancelled(p0: DatabaseError?) {
+        Log.w(this.TAG, "onCancelled", p0?.toException());
+        Toast.makeText(this@ChatActivity, "Failed to load chat.",
+                Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -79,15 +88,27 @@ class ChatActivity : AppCompatActivity() {
 
         attachDataListener()
 
-        sendButton.setOnClickListener {
-            if (messageText.text.isNullOrBlank().not()) {
-                sendNewMessage(messageText.text.toString(), SessionManager.getUid(this@ChatActivity))
+        sendButton.setOnClickListener { sendNewMessage(messageText) }
+
+        messageText.setOnEditorActionListener(TextView.OnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                sendNewMessage(messageText)
+                return@OnEditorActionListener true
             }
+            false
+        })
+    }
+
+    fun sendNewMessage(messageWidget: EditText) {
+        if (messageWidget.text.isNullOrBlank().not()) {
+            // Upload the message to firebase and clear the message textbox
+            sendNewMessage(messageWidget.text.toString(), SessionManager.getUid(this@ChatActivity))
+            messageWidget.setText("")
         }
     }
 
     fun sendNewMessage(messageText: String, userId: String) {
-        val message = Message(userId, "", sessionId ?: "", messageText)
+        val message = Message(userId, SessionManager.getUserPhotoUrl(this), sessionId ?: "", messageText)
 
         FirebaseService.getReference(References.Messages)
                 .child(sessionId)
@@ -98,15 +119,15 @@ class ChatActivity : AppCompatActivity() {
     }
 
     fun attachDataListener(detach: Boolean = false) {
-        val ref = FirebaseService.getReference(References.Sessions)
+        val ref = FirebaseService.getReference(References.Messages)
                 .child(sessionId)
                 .orderByChild("timestamp")
                 .limitToLast(100)
 
         if (detach)
-            ref.removeEventListener(chatListener)
+            ref.removeEventListener(this)
         else
-            ref.addChildEventListener(chatListener)
+            ref.addChildEventListener(this)
     }
 
     override fun onDestroy() {
