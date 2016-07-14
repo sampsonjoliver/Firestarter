@@ -1,5 +1,6 @@
 package com.sampsonjoliver.firestarter.views.chat
 
+import android.os.Handler
 import android.support.v4.view.ViewCompat
 import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
@@ -69,13 +70,35 @@ class MessageRecyclerAdapter(val currentUserId: String, val listener: ChatListen
     override fun onBindViewHolder(holder: ChatHolder?, position: Int) {
         holder?.bind(messages[position],
                 isCurrentUser = messages[position].userId == currentUserId,
-                alignRight = messages[position].userId == currentUserId)
+                alignRight = messages[position].userId == currentUserId, listener = listener)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): ChatHolder = ChatHolder(parent?.inflate(R.layout.row_chat, false))
 
-    inner class ChatHolder(itemview: View?) : RecyclerView.ViewHolder(itemview) {
-        fun bind(messageGroup: MessageBlock, isCurrentUser: Boolean, alignRight: Boolean) {
+    class ChatHolder(itemview: View?) : RecyclerView.ViewHolder(itemview) {
+        val MESSAGE_ID = 0
+        val UPDATE_INTERVAL_MS: Long = 1000 * 60
+
+        private val handler = object : Handler() {
+            fun start() {
+                removeMessages(MESSAGE_ID)
+                sendEmptyMessageDelayed(MESSAGE_ID, UPDATE_INTERVAL_MS)
+            }
+
+            override fun handleMessage(msg: android.os.Message?) {
+                this@ChatHolder.itemView.time.text = DateUtils.getRelativeDateTimeString(itemView.context, messageGroup?.startTime ?: 0,
+                        DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL)
+
+                removeMessages(MESSAGE_ID)
+                this.sendMessageDelayed(msg, UPDATE_INTERVAL_MS)
+            }
+        }
+        var messageGroup: MessageBlock? = null
+
+        fun bind(messageGroup: MessageBlock, isCurrentUser: Boolean, alignRight: Boolean, listener: ChatListener) {
+            this.messageGroup = messageGroup
+            handler.start()
+
             itemView.image.setImageURI(messageGroup.userImageUrl)
 
             itemView.time.text = DateUtils.getRelativeDateTimeString(itemView.context, messageGroup.startTime,
@@ -86,11 +109,11 @@ class MessageRecyclerAdapter(val currentUserId: String, val listener: ChatListen
             itemView.messageGroup.removeAllViews()
 
             messageGroup.messages.forEachIndexed { i, it ->
-                itemView.messageGroup.addView(inflateMessageView(it, isCurrentUser, alignRight, i != 0, i != messageGroup.messages.size - 1, itemView.messageGroup))
+                itemView.messageGroup.addView(inflateMessageView(it, isCurrentUser, alignRight, i != 0, i != messageGroup.messages.size - 1, itemView.messageGroup, listener))
             }
         }
 
-        fun inflateMessageView(message: Message, isCurrentUser: Boolean, alignRight: Boolean, hasPrevious: Boolean, hasNext: Boolean, parent: ViewGroup): View {
+        fun inflateMessageView(message: Message, isCurrentUser: Boolean, alignRight: Boolean, hasPrevious: Boolean, hasNext: Boolean, parent: ViewGroup, listener: ChatListener): View {
             val messageView = parent.inflate(R.layout.row_chat_message, false) as TextView
             messageView.text = message.message
             messageView.setBackgroundResourcePreservePadding(
