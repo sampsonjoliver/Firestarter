@@ -14,7 +14,7 @@ import com.sampsonjoliver.firestarter.utils.inflate
 import com.sampsonjoliver.firestarter.utils.setBackgroundResourcePreservePadding
 import kotlinx.android.synthetic.main.row_chat.view.*
 
-class MessageRecyclerAdapter(val currentUserId: String, val listener: ChatListener) : RecyclerView.Adapter<MessageRecyclerAdapter.ChatHolder>() {
+class ChannelMessageRecyclerAdapter(val currentUserId: String, val listener: ChatListener) : RecyclerView.Adapter<ChannelMessageRecyclerAdapter.ChatHolder>() {
     interface ChatListener {
         fun onItemInsertedListener()
         fun onMessageLongPress(message: Message)
