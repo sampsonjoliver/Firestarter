@@ -90,7 +90,7 @@ class MessageRecyclerAdapter(val currentUserId: String, val listener: ChatListen
                         DateUtils.MINUTE_IN_MILLIS, DateUtils.WEEK_IN_MILLIS, DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_ALL)
 
                 removeMessages(MESSAGE_ID)
-                this.sendMessageDelayed(msg, UPDATE_INTERVAL_MS)
+                this.sendEmptyMessageDelayed(MESSAGE_ID, UPDATE_INTERVAL_MS)
             }
         }
         var messageGroup: MessageBlock? = null
