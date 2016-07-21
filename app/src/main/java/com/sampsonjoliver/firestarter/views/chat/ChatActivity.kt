@@ -2,19 +2,17 @@ package com.sampsonjoliver.firestarter.views.chat
 
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.*
+import com.sampsonjoliver.firestarter.FirebaseActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Message
+import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
 import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
@@ -22,15 +20,28 @@ import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.copyToClipboard
 import kotlinx.android.synthetic.main.activity_chat.*
 
-class ChatActivity : AppCompatActivity(),
-    MessageRecyclerAdapter.ChatListener,
-    ChildEventListener {
+class ChatActivity : FirebaseActivity(),
+        MessageRecyclerAdapter.ChatListener,
+        ChildEventListener {
     companion object {
         const val EXTRA_SESSION_ID = "EXTRA_SESSION_ID"
     }
 
+    val session: Session? = null
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
     val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(), this) }
+
+    val sessionListener = object : ValueEventListener {
+        override fun onCancelled(p0: DatabaseError?) {
+            Log.w(this@ChatActivity.TAG, "onCancelled")
+        }
+
+        override fun onDataChange(p0: DataSnapshot?) {
+            Log.w(this@ChatActivity.TAG, "onDataChange: ${p0?.key}")
+            val session = p0?.getValue(Session::class.java)
+            session?.sessionId = p0?.key
+        }
+    }
 
     override fun onItemInsertedListener() {
         recycler.smoothScrollToPosition(0)
@@ -69,7 +80,7 @@ class ChatActivity : AppCompatActivity(),
         val key = p0?.key ?: ""
 
         // todo need to update message inside of its message group; this is likely to be an expensive
-        // op with our current data model
+        // op with our current local data model
     }
 
     override fun onCancelled(p0: DatabaseError?) {
@@ -82,6 +93,13 @@ class ChatActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_chat)
+
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        collapsingToolbar.isTitleEnabled = true
+        collapsingToolbar.setTitle("Chatorama") // todo
+        toolbar.setOnClickListener { appBarLayout.setExpanded(true, true) }
+        messageText.setOnClickListener { appBarLayout.setExpanded(false, true) }
 
         recycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
         recycler.adapter = adapter
@@ -128,6 +146,13 @@ class ChatActivity : AppCompatActivity(),
             ref.removeEventListener(this)
         else
             ref.addChildEventListener(this)
+
+        FirebaseService.getReference(References.Sessions).child(sessionId).run {
+            when (detach) {
+                true -> this.removeEventListener(sessionListener)
+                else -> this.addValueEventListener(sessionListener)
+            }
+        }
     }
 
     override fun onDestroy() {

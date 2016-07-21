@@ -2,6 +2,7 @@
 <android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,75 +10,96 @@
     tools:context=".views.chat.ChatActivity">
 
   <android.support.design.widget.AppBarLayout
+      android:id="@+id/appBarLayout"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:theme="@style/AppTheme.AppBarOverlay">
+      android:layout_height="200dp"
+      android:fitsSystemWindows="true"
+      android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        app:popupTheme="@style/AppTheme.PopupOverlay"/>
-
-  </android.support.design.widget.AppBarLayout>
-
-  <RelativeLayout
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      app:layout_behavior="@string/appbar_scrolling_view_behavior"
-      android:clipChildren="false"
-      android:clipToPadding="false"
-      >
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recycler"
+    <android.support.design.widget.CollapsingToolbarLayout
+        android:id="@+id/collapsingToolbar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottomView"
-        />
-
-    <android.support.design.widget.CoordinatorLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/bottomView"
-        android:layout_alignParentBottom="true"
-        android:clipChildren="false"
-        android:clipToPadding="false"
-        >
+        app:layout_scrollFlags="scroll|exitUntilCollapsed"
+        android:fitsSystemWindows="true"
+        app:contentScrim="?attr/colorPrimary"
+        app:title="Title Text"
+        app:titleEnabled="true"
+        app:collapsedTitleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title"
+        app:expandedTitleGravity="top|left|start"
+        app:expandedTitleMarginStart="48dp"
+        app:expandedTitleMarginEnd="64dp">
 
       <RelativeLayout
           android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_gravity="bottom"
-          android:background="@color/gallery"
-          app:layout_behavior="com.sampsonjoliver.firestarter.views.chat.Behavior"
-          >
+          android:layout_height="match_parent"
+          android:fitsSystemWindows="true"
+          app:layout_scrollFlags="scroll"
+          app:layout_collapseMode="parallax">
 
-        <EditText
-            android:id="@+id/messageText"
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/banner"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingLeft="@dimen/spacingLarge"
-            android:layout_toLeftOf="@+id/sendButton"
-            android:layout_alignTop="@+id/sendButton"
-            android:layout_alignBottom="@+id/sendButton"
-            android:maxLines="3"
-            android:inputType="textCapSentences"
-            android:imeOptions="actionSend"
-            android:hint="@string/enter_message"/>
-
-        <com.sampsonjoliver.firestarter.views.FontIconView
-            android:id="@+id/sendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="15dp"
-            android:text="@string/ic_send"
-            android:textColor="@color/ic_click_selector"
-            android:textSize="30sp"
-            android:layout_alignParentRight="true"/>
-
+            android:layout_height="match_parent"
+            fresco:placeholderImage="@drawable/ic_account_circle_black_36dp"
+            fresco:placeholderImageScaleType="centerCrop"
+            fresco:actualImageScaleType="focusCrop"
+            fresco:fadeDuration="300"
+            />
       </RelativeLayout>
-    </android.support.design.widget.CoordinatorLayout>
+
+      <android.support.v7.widget.Toolbar
+          android:id="@+id/toolbar"
+          android:layout_width="match_parent"
+          android:layout_height="?attr/actionBarSize"
+          app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+          app:layout_collapseMode="pin" />
+
+    </android.support.design.widget.CollapsingToolbarLayout>
+
+  </android.support.design.widget.AppBarLayout>
+
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/recycler"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_above="@+id/bottomView"
+      android:layout_marginBottom="65dp"
+      app:layout_behavior="@string/appbar_scrolling_view_behavior"
+      />
+
+  <RelativeLayout
+      android:id="@+id/bottomView"
+      android:layout_width="match_parent"
+      android:layout_height="65dp"
+      android:layout_alignParentBottom="true"
+      android:layout_gravity="bottom"
+      android:background="@color/gallery"
+      app:layout_behavior="com.sampsonjoliver.firestarter.views.chat.ChannelMessageBoxBehaviour"
+      >
+
+    <EditText
+        android:id="@+id/messageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/spacingLarge"
+        android:layout_toLeftOf="@+id/sendButton"
+        android:layout_alignTop="@+id/sendButton"
+        android:layout_alignBottom="@+id/sendButton"
+        android:maxLines="3"
+        android:inputType="textCapSentences"
+        android:imeOptions="actionSend"
+        android:hint="@string/enter_message"/>
+
+    <com.sampsonjoliver.firestarter.views.FontIconView
+        android:id="@+id/sendButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:text="@string/ic_send"
+        android:textColor="@color/ic_click_selector"
+        android:textSize="30sp"
+        android:layout_alignParentRight="true"/>
+
   </RelativeLayout>
 </android.support.design.widget.CoordinatorLayout>

@@ -7,26 +7,27 @@ import android.support.v4.view.ViewCompat;
 import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.RelativeLayout;
 
 import java.util.List;
 
-public class Behavior extends CoordinatorLayout.Behavior<RelativeLayout> {
+public class ChannelMessageBoxBehaviour extends CoordinatorLayout.Behavior<View> {
     private float translationY;
 
-    public Behavior(Context context, AttributeSet attrs) {
+    public ChannelMessageBoxBehaviour(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 
     @Override
-    public boolean layoutDependsOn(CoordinatorLayout parent, RelativeLayout child, View dependency) {
-        return dependency instanceof Snackbar.SnackbarLayout;
+    public boolean layoutDependsOn(CoordinatorLayout parent, View child, View dependency) {
+        return dependency instanceof Snackbar.SnackbarLayout || super.layoutDependsOn(parent, child, dependency);
     }
 
     @Override
-    public boolean onDependentViewChanged(CoordinatorLayout parent, RelativeLayout child, View dependency) {
-        updateViewTranslationForSnackbar(parent, child, true);
-        return false;
+    public boolean onDependentViewChanged(CoordinatorLayout parent, View child, View dependency) {
+        if (dependency instanceof Snackbar.SnackbarLayout) {
+            updateViewTranslationForSnackbar(parent, child, true);
+        }
+        return super.onDependentViewChanged(parent, child, dependency);
     }
 
     private void updateViewTranslationForSnackbar(CoordinatorLayout parent, final View view, boolean animationAllowed) {
