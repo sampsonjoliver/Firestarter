@@ -1,26 +1,25 @@
 package com.sampsonjoliver.firestarter.views.main
 
 import android.content.Intent
+import android.location.Location
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.Toolbar
+import android.support.v7.widget.SimpleItemAnimator
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
-import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.sampsonjoliver.firestarter.FirebaseActivity
+import com.sampsonjoliver.firestarter.LocationAwareActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
@@ -29,9 +28,17 @@ import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.insertSorted
 import com.sampsonjoliver.firestarter.views.chat.ChatActivity
+import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
-class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelectedListener {
+class HomeActivity : LocationAwareActivity(),
+        NavigationView.OnNavigationItemSelectedListener {
+
+    companion object {
+        const val LOCATION_KEY = "LOCATION_KEY"
+    }
+
     val sessionListListener = object : ChildEventListener {
         override fun onChildMoved(p0: DataSnapshot?, previousChildName: String?) {
             Log.w(this.TAG, "onChildMoved: ${p0?.key}")
@@ -90,7 +97,7 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
         }
     }
 
-    val adapter: HomeRecyclerAdapter? = HomeRecyclerAdapter(LatLng(-37.8148752,144.9623464), object : HomeRecyclerAdapter.OnSessionClickedListener {
+    val adapter: HomeRecyclerAdapter? = HomeRecyclerAdapter(object : HomeRecyclerAdapter.OnSessionClickedListener {
         override fun onSessionClicked(session: Session) {
             startActivity(Intent(this@HomeActivity, ChatActivity::class.java).apply {
                 putExtra(ChatActivity.EXTRA_SESSION_ID, session.sessionId)
@@ -98,27 +105,42 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
         }
     })
 
+    override fun onConnected(connectionHint: Bundle?) {
+        super.onConnected(connectionHint)
+        startLocationUpdatesWithChecks()
+    }
+
+    override fun onLocationChanged(location: Location?) {
+        // Update the UI with the latest location
+        adapter?.location = location
+    }
+
     fun logout() {
         attachDataWatcher(detach = true)
         FirebaseAuth.getInstance().signOut()
     }
 
+    override fun onSaveInstanceState(savedInstanceState: Bundle) {
+        savedInstanceState.putParcelable(LOCATION_KEY, adapter?.location)
+        super.onSaveInstanceState(savedInstanceState)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        initView()
+        updateValuesFromBundle(savedInstanceState)
 
-        SessionManager.getUid(this)
+        attachDataWatcher()
+    }
 
+    fun initView() {
         setContentView(R.layout.activity_home)
-        val toolbar = findViewById(R.id.toolbar) as Toolbar?
         setSupportActionBar(toolbar)
 
-        val fab = findViewById(R.id.fab) as FloatingActionButton?
-        fab!!.setOnClickListener { view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show() }
+        fab.setOnClickListener { view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show() }
 
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout?
-        val toggle = ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawer?.addDrawerListener(toggle)
+        val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
+        drawerLayout?.addDrawerListener(toggle)
         toggle.syncState()
 
         val navigationView = findViewById(R.id.nav_view) as NavigationView?
@@ -126,35 +148,39 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
 
         recycler.adapter = adapter
         recycler.layoutManager = LinearLayoutManager(this)
-        attachDataWatcher()
+        (recycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+    }
+
+    private fun updateValuesFromBundle(savedInstanceState: Bundle?) {
+        savedInstanceState?.let {
+            if (savedInstanceState.keySet().contains(LOCATION_KEY))
+                adapter?.location = savedInstanceState.getParcelable(LOCATION_KEY)
+        }
     }
 
     fun attachDataWatcher(detach: Boolean = false) {
         // todo below are two methods for getting user subscriptions, presented for robustness
         // ideally we should not be using both of these
+        val sessionQuery = FirebaseService
+                .getReference(References.Sessions)
+                .orderByChild("userId")
+                .equalTo(SessionManager.getUid())
+        val userSubscriptionQuery = FirebaseService
+                .getReference(References.UserSubscriptions)
+                .child(SessionManager.getUid())
+                .orderByChild("startDate")
+
         if (detach) {
-            FirebaseService.getReference(References.Sessions)
-                    .orderByChild("userId").equalTo(SessionManager.getUid(this))
-                    .removeEventListener(sessionListListener)
-
-            FirebaseService.getReference(References.UserSubscriptions)
-                    .child(SessionManager.getUid(this))
-                    .orderByChild("startDate")
-                    .removeEventListener(sessionListListener)
+            sessionQuery.removeEventListener(sessionListListener)
+            userSubscriptionQuery.removeEventListener(sessionListListener)
         } else {
-            FirebaseService.getReference(References.Sessions)
-                    .orderByChild("userId").equalTo(SessionManager.getUid(this))
-                    .addChildEventListener(sessionListListener)
-
-            FirebaseService.getReference(References.UserSubscriptions)
-                    .child(SessionManager.getUid(this))
-                    .orderByChild("startDate")
-                    .addChildEventListener(sessionListListener)
+            sessionQuery.addChildEventListener(sessionListListener)
+            userSubscriptionQuery.addChildEventListener(sessionListListener)
         }
     }
 
     override fun onBackPressed() {
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout?
+        val drawer = findViewById(R.id.drawerLayout) as DrawerLayout?
         if (drawer!!.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START)
         } else {
@@ -189,7 +215,7 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
             R.id.nav_logout -> logout()
         }
 
-        val drawer = findViewById(R.id.drawer_layout) as DrawerLayout?
+        val drawer = findViewById(R.id.drawerLayout) as DrawerLayout?
         drawer?.closeDrawer(GravityCompat.START)
         return true
     }

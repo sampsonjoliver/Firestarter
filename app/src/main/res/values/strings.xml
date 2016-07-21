@@ -21,4 +21,14 @@
   <string name="action_settings">Settings</string>
   <string name="distance">Distance</string>
   <string name="enter_message">Enter message</string>
+  <string name="copied_to_clipboard">Copied text to clipboard</string>
+  <string name="location_permission_rationale_title">Permissions required</string>
+  <string name="location_permission_rationale_message">Firestarter uses your location to find events happening near you. Without it, you\'ll have to search through thousands of events to find ones relevant to you.</string>
+  <string name="cancel">Cancel</string>
+  <string name="grant">Grant</string>
+  <string name="okay">Okay</string>
+  <string name="get_directions">Get Directions</string>
+  <string name="google_services_disconnected">Connection to Google Services has been lost. We\'ll try getting them back again…</string>
+  <string name="google_services_required_title">Google Play Services Required</string>
+  <string name="google_services_required_message">We\'ve detected your device either doesn\'t have or is incompatible with the Google Play Services. Unfortunately we need these present to handle our shiny location-aware features. So we\'ll let you proceed, but things might be not that awesome.</string>
 </resources>

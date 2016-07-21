@@ -1,7 +1,6 @@
 package com.sampsonjoliver.firestarter.utils
 
 import android.location.Location
-import com.google.android.gms.maps.model.LatLng
 
 object DistanceUtils {
     const val METERS_IN_MILE = 1609.34
@@ -58,9 +57,9 @@ object DistanceUtils {
      * If results has length 2 or greater, the initial bearing is stored in results[1].
      * If results has length 3 or greater, the final bearing is stored in results[2].
      */
-    fun latLngDistance(pos1: LatLng, pos2: LatLng): FloatArray {
+    fun latLngDistance(latitude1: Double, longitude1: Double, latitude2: Double, longitude2: Double): FloatArray {
         val result = FloatArray(3)
-        Location.distanceBetween(pos1.latitude, pos1.longitude, pos2.latitude, pos2.longitude, result)
+        Location.distanceBetween(latitude1, longitude1, latitude2, longitude2, result)
         return result
     }
 }

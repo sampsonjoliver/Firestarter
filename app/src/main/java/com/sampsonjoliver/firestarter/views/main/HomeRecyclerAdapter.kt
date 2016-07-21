@@ -1,18 +1,23 @@
 package com.sampsonjoliver.firestarter.views.main
 
+import android.location.Location
 import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.gms.maps.model.LatLng
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.utils.DistanceUtils
+import com.sampsonjoliver.firestarter.utils.appear
 import com.sampsonjoliver.firestarter.utils.inflate
 import kotlinx.android.synthetic.main.row_session.view.*
-import java.util.*
 
-class HomeRecyclerAdapter(var latLng: LatLng, val listener: OnSessionClickedListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    var location: Location? = null
+        set(value) {
+            field = value
+            notifyItemRangeChanged(0, itemCount)
+        }
 
     interface OnSessionClickedListener {
         fun onSessionClicked(session: Session)
@@ -26,9 +31,7 @@ class HomeRecyclerAdapter(var latLng: LatLng, val listener: OnSessionClickedList
 
     }
 
-    override fun getItemCount(): Int {
-        return sessions.size
-    }
+    override fun getItemCount(): Int = sessions.size
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder? {
         return SessionViewHolder(parent?.inflate(R.layout.row_session, false))
@@ -40,10 +43,13 @@ class HomeRecyclerAdapter(var latLng: LatLng, val listener: OnSessionClickedList
             itemView.subtitle.text = session.username
             itemView.image.setImageURI(session.bannerUrl)
 
-            itemView.distance.text = DistanceUtils.formatDistance(DistanceUtils.latLngDistance(latLng, session.location)[0].toDouble())
+            itemView.appear = location != null
+            if (location != null) {
+                itemView.distance.text = DistanceUtils.formatDistance(DistanceUtils.latLngDistance(location?.latitude ?: 0.0, location?.longitude ?: 0.0, session.lat, session.lng)[0].toDouble())
+            }
 
             itemView.time.text = DateUtils.getRelativeTimeSpanString(
-                    session.startDateAsDate.time ?: Date().time,
+                    session.startDate,
                     System.currentTimeMillis(),
                     DateUtils.MINUTE_IN_MILLIS,
                     DateUtils.FORMAT_ABBREV_RELATIVE)
