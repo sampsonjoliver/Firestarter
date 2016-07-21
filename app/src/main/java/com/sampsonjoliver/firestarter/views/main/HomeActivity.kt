@@ -28,7 +28,7 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.insertSorted
-import com.sampsonjoliver.firestarter.views.chat.ChatActivity
+import com.sampsonjoliver.firestarter.views.chat.ChannelActivity
 import kotlinx.android.synthetic.main.content_main.*
 
 class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -92,8 +92,8 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
 
     val adapter: HomeRecyclerAdapter? = HomeRecyclerAdapter(LatLng(-37.8148752,144.9623464), object : HomeRecyclerAdapter.OnSessionClickedListener {
         override fun onSessionClicked(session: Session) {
-            startActivity(Intent(this@HomeActivity, ChatActivity::class.java).apply {
-                putExtra(ChatActivity.EXTRA_SESSION_ID, session.sessionId)
+            startActivity(Intent(this@HomeActivity, ChannelActivity::class.java).apply {
+                putExtra(ChannelActivity.EXTRA_SESSION_ID, session.sessionId)
             })
         }
     })

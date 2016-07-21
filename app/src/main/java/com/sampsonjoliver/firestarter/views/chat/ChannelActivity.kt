@@ -18,10 +18,10 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.copyToClipboard
-import kotlinx.android.synthetic.main.activity_chat.*
+import kotlinx.android.synthetic.main.activity_channel.*
 
-class ChatActivity : FirebaseActivity(),
-        MessageRecyclerAdapter.ChatListener,
+class ChannelActivity : FirebaseActivity(),
+        ChannelMessageRecyclerAdapter.ChatListener,
         ChildEventListener {
     companion object {
         const val EXTRA_SESSION_ID = "EXTRA_SESSION_ID"
@@ -29,15 +29,15 @@ class ChatActivity : FirebaseActivity(),
 
     val session: Session? = null
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
-    val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(), this) }
+    val adapter by lazy { ChannelMessageRecyclerAdapter(SessionManager.getUid(), this) }
 
     val sessionListener = object : ValueEventListener {
         override fun onCancelled(p0: DatabaseError?) {
-            Log.w(this@ChatActivity.TAG, "onCancelled")
+            Log.w(this@ChannelActivity.TAG, "onCancelled")
         }
 
         override fun onDataChange(p0: DataSnapshot?) {
-            Log.w(this@ChatActivity.TAG, "onDataChange: ${p0?.key}")
+            Log.w(this@ChannelActivity.TAG, "onDataChange: ${p0?.key}")
             val session = p0?.getValue(Session::class.java)
             session?.sessionId = p0?.key
         }
@@ -85,14 +85,14 @@ class ChatActivity : FirebaseActivity(),
 
     override fun onCancelled(p0: DatabaseError?) {
         Log.w(this.TAG, "onCancelled", p0?.toException());
-        Toast.makeText(this@ChatActivity, "Failed to load chat.",
+        Toast.makeText(this@ChannelActivity, "Failed to load chat.",
                 Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContentView(R.layout.activity_chat)
+        setContentView(R.layout.activity_channel)
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -132,7 +132,7 @@ class ChatActivity : FirebaseActivity(),
                 .child(sessionId)
                 .push()
                 .setValue(message, DatabaseReference.CompletionListener { databaseError, databaseReference ->
-                    Log.w(this@ChatActivity.TAG, "onPushMessage: error=" + databaseError?.message)
+                    Log.w(this@ChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
                 })
     }
 
