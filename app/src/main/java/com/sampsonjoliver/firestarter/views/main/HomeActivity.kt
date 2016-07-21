@@ -106,8 +106,6 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        SessionManager.getUid(this)
-
         setContentView(R.layout.activity_home)
         val toolbar = findViewById(R.id.toolbar) as Toolbar?
         setSupportActionBar(toolbar)
@@ -134,20 +132,20 @@ class HomeActivity : FirebaseActivity(), NavigationView.OnNavigationItemSelected
         // ideally we should not be using both of these
         if (detach) {
             FirebaseService.getReference(References.Sessions)
-                    .orderByChild("userId").equalTo(SessionManager.getUid(this))
+                    .orderByChild("userId").equalTo(SessionManager.getUid())
                     .removeEventListener(sessionListListener)
 
             FirebaseService.getReference(References.UserSubscriptions)
-                    .child(SessionManager.getUid(this))
+                    .child(SessionManager.getUid())
                     .orderByChild("startDate")
                     .removeEventListener(sessionListListener)
         } else {
             FirebaseService.getReference(References.Sessions)
-                    .orderByChild("userId").equalTo(SessionManager.getUid(this))
+                    .orderByChild("userId").equalTo(SessionManager.getUid())
                     .addChildEventListener(sessionListListener)
 
             FirebaseService.getReference(References.UserSubscriptions)
-                    .child(SessionManager.getUid(this))
+                    .child(SessionManager.getUid())
                     .orderByChild("startDate")
                     .addChildEventListener(sessionListListener)
         }

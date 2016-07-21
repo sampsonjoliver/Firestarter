@@ -30,7 +30,7 @@ class ChatActivity : AppCompatActivity(),
     }
 
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
-    val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(this), this) }
+    val adapter by lazy { MessageRecyclerAdapter(SessionManager.getUid(), this) }
 
     override fun onItemInsertedListener() {
         recycler.smoothScrollToPosition(0)
@@ -102,13 +102,13 @@ class ChatActivity : AppCompatActivity(),
     fun sendNewMessage(messageWidget: EditText) {
         if (messageWidget.text.isNullOrBlank().not()) {
             // Upload the message to firebase and clear the message textbox
-            sendNewMessage(messageWidget.text.toString(), SessionManager.getUid(this@ChatActivity))
+            sendNewMessage(messageWidget.text.toString(), SessionManager.getUid())
             messageWidget.setText("")
         }
     }
 
     fun sendNewMessage(messageText: String, userId: String) {
-        val message = Message(userId, SessionManager.getUserPhotoUrl(this), sessionId ?: "", messageText)
+        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText)
 
         FirebaseService.getReference(References.Messages)
                 .child(sessionId)
