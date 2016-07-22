@@ -43,13 +43,13 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
             itemView.subtitle.text = session.username
             itemView.image.setImageURI(session.bannerUrl)
 
-            itemView.appear = location != null
+            itemView.distance.appear = location != null
             if (location != null) {
-                itemView.distance.text = DistanceUtils.formatDistance(DistanceUtils.latLngDistance(location?.latitude ?: 0.0, location?.longitude ?: 0.0, session.lat, session.lng)[0].toDouble())
+                itemView.distance.text = DistanceUtils.formatDistance(latLng, session.location)
             }
 
             itemView.time.text = DateUtils.getRelativeTimeSpanString(
-                    session.startDate,
+                    session.startDateAsDate.time ?: Date().time,
                     System.currentTimeMillis(),
                     DateUtils.MINUTE_IN_MILLIS,
                     DateUtils.FORMAT_ABBREV_RELATIVE)

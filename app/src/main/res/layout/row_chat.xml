@@ -6,6 +6,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layoutDirection="ltr"
+                android:paddingLeft="@dimen/rowInset"
+                android:paddingRight="@dimen/rowInset"
+                android:paddingStart="@dimen/rowInset"
+                android:paddingEnd="@dimen/rowInset"
+                android:paddingTop="@dimen/spacingMedium"
+                android:paddingBottom="@dimen/spacingMedium"
     >
 
   <com.facebook.drawee.view.SimpleDraweeView
@@ -15,46 +21,43 @@
       android:layout_marginEnd="@dimen/activity_horizontal_margin"
       android:layout_marginRight="@dimen/activity_horizontal_margin"
       android:layout_marginBottom="@dimen/spacingSmall"
-      android:layout_marginTop="@dimen/spacingSmall"
-      android:layout_marginLeft="@dimen/rowInset"
-      android:layout_marginStart="@dimen/rowInset"
       android:layout_alignParentLeft="true"
       android:layout_alignParentStart="true"
+      android:layout_marginTop="-2dp"
+      android:layout_below="@id/time"
       fresco:roundAsCircle="true"
-      fresco:roundingBorderWidth="1dp"
-      fresco:roundingBorderColor="#f00"
-      tools:background="#000"/>
+      fresco:roundingBorderWidth="0dp"
+      fresco:roundingBorderColor="@color/dusty_gray"
+      fresco:placeholderImage="@drawable/ic_account_circle_black_36dp"
+      fresco:placeholderImageScaleType="centerCrop"
+      fresco:backgroundImage="@color/dusty_gray"
+      fresco:actualImageScaleType="focusCrop"
+      fresco:fadeDuration="300"
+      />
 
   <TextView
       android:id="@+id/time"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_below="@id/image"
-      android:layout_alignLeft="@+id/message"
-      android:layout_alignStart="@id/message"
+      android:layout_centerHorizontal="true"
+      android:layout_alignParentTop="true"
       android:paddingLeft="@dimen/spacingSmall"
       android:paddingStart="@dimen/spacingSmall"
-      android:layout_marginLeft="@dimen/spacingMedium"
+      android:layout_marginBottom="@dimen/spacingXSmall"
       android:paddingEnd="@dimen/spacingSmall"
       android:paddingRight="@dimen/spacingSmall"
       android:gravity="center"
-      android:textColor="@color/black"
-      android:textSize="@dimen/textSizeXxSmall"
+      android:textColor="@color/dove_gray"
+      android:textSize="@dimen/textSizeXSmall"
       tools:text="3 mins ago"/>
 
-  <TextView
-      android:id="@+id/message"
+  <LinearLayout
+      android:id="@+id/messageGroup"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_marginStart="63dp"
-      android:background="@drawable/chat_bubble_single"
-      android:paddingTop="@dimen/spacingMedium"
-      android:paddingBottom="@dimen/spacingMedium"
-      android:paddingLeft="@dimen/spacingLarge"
-      android:paddingRight="@dimen/spacingLarge"
-      android:layout_marginBottom="@dimen/spacingXSmall"
-      android:textColor="@color/white"
-      android:textSize="@dimen/textSizeLarge"
-      tools:text="This is a message"/>
+      android:orientation="vertical"
+      android:layout_toRightOf="@+id/image"
+      android:layout_toEndOf="@+id/image"
+      android:layout_below="@+id/time"/>
 
 </RelativeLayout>

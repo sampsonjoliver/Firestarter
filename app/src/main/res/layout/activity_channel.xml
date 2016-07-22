@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:context=".views.chat.ChannelActivity">
+
+  <android.support.design.widget.AppBarLayout
+      android:id="@+id/appBarLayout"
+      android:layout_width="match_parent"
+      android:layout_height="200dp"
+      android:fitsSystemWindows="true"
+      android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+    <android.support.design.widget.CollapsingToolbarLayout
+        android:id="@+id/collapsingToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_scrollFlags="scroll|exitUntilCollapsed"
+        app:contentScrim="?attr/colorPrimary"
+        app:collapsedTitleTextAppearance="@style/TextAppearance.Widget.AppCompat.Toolbar.Title"
+        app:expandedTitleTextAppearance="@style/TextAppearance.AppCompat.Headline"
+        app:expandedTitleGravity="top|left|start"
+        app:expandedTitleMarginStart="48dp"
+        app:expandedTitleMarginEnd="32dp"
+        android:fitsSystemWindows="true"
+        >
+
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/banner"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            fresco:placeholderImage="@drawable/ic_image_black"
+            fresco:placeholderImageScaleType="centerCrop"
+            tools:src="@drawable/ic_image_black" />
+
+      <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:fitsSystemWindows="true"
+          app:layout_scrollFlags="scroll"
+          app:layout_collapseParallaxMultiplier="0.4"
+          app:layout_collapseMode="parallax">
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/locationIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacingLarge"
+            android:layout_marginLeft="@dimen/spacingMedium"
+            android:layout_marginRight="@dimen/spacingMedium"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:textSize="@dimen/textSizeXxxLarge"
+            android:text="@string/ic_person_pin_circle"
+            />
+
+        <TextView
+            android:id="@+id/distance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_alignTop="@+id/locationIcon"
+            android:layout_alignBottom="@+id/locationIcon"
+            android:layout_toEndOf="@+id/locationIcon"
+            android:textSize="@dimen/textSizeXLarge"
+            tools:text="10 km NE"
+            />
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/usersIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacingXSmall"
+            android:layout_marginLeft="@dimen/spacingMedium"
+            android:layout_marginRight="@dimen/spacingMedium"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:layout_above="@id/locationIcon"
+            android:layout_alignParentStart="true"
+            android:textSize="@dimen/textSizeXxxLarge"
+            android:text="@string/ic_person_pin_circle"
+            />
+
+        <TextView
+            android:id="@+id/users"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_alignTop="@+id/usersIcon"
+            android:layout_alignBottom="@+id/usersIcon"
+            android:layout_toEndOf="@+id/locationIcon"
+            android:textSize="@dimen/textSizeXLarge"
+            tools:text="23"
+            />
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/timeIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacingXSmall"
+            android:layout_marginLeft="@dimen/spacingMedium"
+            android:layout_marginRight="@dimen/spacingMedium"
+            android:gravity="center"
+            android:layout_gravity="bottom"
+            android:layout_above="@id/usersIcon"
+            android:layout_alignParentStart="true"
+            android:textSize="@dimen/textSizeXxxLarge"
+            android:text="@string/ic_person_pin_circle"
+            />
+
+        <TextView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_alignTop="@+id/timeIcon"
+            android:layout_alignBottom="@+id/timeIcon"
+            android:layout_toEndOf="@+id/timeIcon"
+            android:textSize="@dimen/textSizeXLarge"
+            tools:text="7:00 PM"
+            />
+
+      </RelativeLayout>
+
+      <android.support.v7.widget.Toolbar
+          android:id="@+id/toolbar"
+          android:layout_width="match_parent"
+          android:layout_height="?attr/actionBarSize"
+          app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+          app:layout_collapseMode="pin" />
+
+    </android.support.design.widget.CollapsingToolbarLayout>
+
+  </android.support.design.widget.AppBarLayout>
+
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/recycler"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:layout_above="@+id/bottomView"
+      android:layout_marginBottom="65dp"
+      app:layout_behavior="@string/appbar_scrolling_view_behavior"
+      />
+
+  <RelativeLayout
+      android:id="@+id/bottomView"
+      android:layout_width="match_parent"
+      android:layout_height="65dp"
+      android:layout_alignParentBottom="true"
+      android:layout_gravity="bottom"
+      android:background="@color/gallery"
+      app:layout_behavior="com.sampsonjoliver.firestarter.views.chat.ChannelMessageBoxBehaviour"
+      >
+
+    <EditText
+        android:id="@+id/messageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/spacingLarge"
+        android:layout_toLeftOf="@+id/sendButton"
+        android:layout_alignTop="@+id/sendButton"
+        android:layout_alignBottom="@+id/sendButton"
+        android:maxLines="3"
+        android:inputType="textCapSentences"
+        android:imeOptions="actionSend"
+        android:hint="@string/enter_message"/>
+
+    <com.sampsonjoliver.firestarter.views.FontIconView
+        android:id="@+id/sendButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:text="@string/ic_send"
+        android:textColor="@color/ic_click_selector"
+        android:textSize="30sp"
+        android:layout_alignParentRight="true"/>
+
+  </RelativeLayout>
+</android.support.design.widget.CoordinatorLayout>

@@ -3,9 +3,9 @@ package com.sampsonjoliver.firestarter.utils
 import android.location.Location
 
 object DistanceUtils {
-    const val METERS_IN_MILE = 1609.34
-    const val METERS_IN_KM = 1000.0
-    const val METERS_IN_FOOT = 0.3048
+    const val METERS_IN_MILE = 1609.34f
+    const val METERS_IN_KM = 1000.0f
+    const val METERS_IN_FOOT = 0.3048f
 
     enum class DistanceUnits {
         METRIC,
@@ -18,8 +18,12 @@ object DistanceUtils {
         AUTO
     }
 
-    fun formatDistance(distanceInMeters: Double, unit: DistanceUnits = DistanceUnits.METRIC, minResolution: DistanceResolution = DistanceResolution.AUTO): String {
-        var distance: Double
+    fun formatDistance(pos1: LatLng, pos2: LatLng, unit: DistanceUnits = DistanceUnits.METRIC, minResolution: DistanceResolution = DistanceResolution.AUTO): String {
+        return formatDistance(latLngDistance(pos1, pos2).get(0), unit, minResolution)
+    }
+
+    fun formatDistance(distanceInMeters: Float, unit: DistanceUnits = DistanceUnits.METRIC, minResolution: DistanceResolution = DistanceResolution.AUTO): String {
+        var distance: Float
         var determinedResolution = minResolution
         if (unit == DistanceUnits.METRIC) {
             if (minResolution == DistanceResolution.MAJOR) {

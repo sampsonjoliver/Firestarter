@@ -48,7 +48,15 @@ object SessionManager {
         FirebaseAuth.getInstance().removeAuthStateListener(sessionListener)
     }
 
-    fun getUid(context: Context) = getDefaultPrefs(context).getString(PREF_USER_ID, null)
+    fun getUid() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    fun getUserPhotoUrl(): String {
+        return FirebaseAuth.getInstance().currentUser?.providerData?.find { it.photoUrl?.toString().isNullOrBlank().not() }?.photoUrl?.toString() ?: ""
+    }
+
+    fun getUserPhotoUrl(context: Context): String {
+        return FirebaseAuth.getInstance().currentUser?.providerData?.find { it.photoUrl?.toString().isNullOrBlank().not() }?.photoUrl?.toString() ?: ""
+    }
 
     fun setUserDetails(context: Context, userInfo: UserInfo) {
         getDefaultPrefs(context).edit()
