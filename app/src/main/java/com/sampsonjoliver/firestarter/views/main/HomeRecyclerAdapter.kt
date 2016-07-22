@@ -40,7 +40,7 @@ class HomeRecyclerAdapter(var latLng: LatLng, val listener: OnSessionClickedList
             itemView.subtitle.text = session.username
             itemView.image.setImageURI(session.bannerUrl)
 
-            itemView.distance.text = DistanceUtils.formatDistance(DistanceUtils.latLngDistance(latLng, session.location)[0].toDouble())
+            itemView.distance.text = DistanceUtils.formatDistance(latLng, session.location)
 
             itemView.time.text = DateUtils.getRelativeTimeSpanString(
                     session.startDateAsDate.time ?: Date().time,
