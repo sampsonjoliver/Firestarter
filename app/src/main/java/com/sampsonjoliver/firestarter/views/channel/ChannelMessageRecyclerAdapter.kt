@@ -1,4 +1,4 @@
-package com.sampsonjoliver.firestarter.views.chat
+package com.sampsonjoliver.firestarter.views.channel
 
 import android.os.Handler
 import android.support.v4.view.ViewCompat

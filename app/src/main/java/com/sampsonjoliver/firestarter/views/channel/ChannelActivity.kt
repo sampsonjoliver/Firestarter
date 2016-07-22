@@ -1,4 +1,4 @@
-package com.sampsonjoliver.firestarter.views.chat
+package com.sampsonjoliver.firestarter.views.channel
 
 import android.os.Bundle
 import android.support.design.widget.Snackbar

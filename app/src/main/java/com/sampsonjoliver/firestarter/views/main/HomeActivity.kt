@@ -3,7 +3,6 @@ package com.sampsonjoliver.firestarter.views.main
 import android.content.Intent
 import android.location.Location
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
@@ -20,15 +19,15 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.LocationAwareActivity
+import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
 import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.insertSorted
-import com.sampsonjoliver.firestarter.views.chat.ChannelActivity
+import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*

@@ -40,7 +40,7 @@
         android:theme="@style/AppTheme.NoActionBar">
     </activity>
     <activity
-        android:name=".views.chat.ChannelActivity"
+        android:name=".views.channel.ChannelActivity"
         android:label="@string/app_name"
         android:theme="@style/AppTheme.NoActionBar">
     </activity>

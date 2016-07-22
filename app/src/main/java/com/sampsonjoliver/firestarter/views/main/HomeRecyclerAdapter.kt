@@ -5,12 +5,14 @@ import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
 import android.view.View
 import android.view.ViewGroup
+import com.google.android.gms.maps.model.LatLng
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.utils.DistanceUtils
 import com.sampsonjoliver.firestarter.utils.appear
 import com.sampsonjoliver.firestarter.utils.inflate
 import kotlinx.android.synthetic.main.row_session.view.*
+import java.util.*
 
 class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var location: Location? = null
@@ -45,7 +47,7 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
 
             itemView.distance.appear = location != null
             if (location != null) {
-                itemView.distance.text = DistanceUtils.formatDistance(latLng, session.location)
+                itemView.distance.text = DistanceUtils.formatDistance(LatLng(location?.latitude ?: 0.0, location?.longitude ?: 0.0), session.location)
             }
 
             itemView.time.text = DateUtils.getRelativeTimeSpanString(
