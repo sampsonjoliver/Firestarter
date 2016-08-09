@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:fresco="http://schemas.android.com/apk/res-auto"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+  <android.support.design.widget.AppBarLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:theme="@style/AppTheme.AppBarOverlay">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:popupTheme="@style/AppTheme.PopupOverlay"/>
+
+  </android.support.design.widget.AppBarLayout>
+
+  <ScrollView
+      android:layout_width="match_parent"
+      android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+      <com.facebook.drawee.view.SimpleDraweeView
+          android:id="@+id/banner"
+          android:layout_width="match_parent"
+          android:layout_height="@dimen/header_size"
+          fresco:fadeDuration="300"
+          fresco:actualImageScaleType="focusCrop"
+          fresco:placeholderImage="@drawable/ic_add_a_photo_black_24dp"
+          fresco:placeholderImageScaleType="fitCenter"
+          />
+
+      <android.support.design.widget.TextInputLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginLeft="@dimen/activity_horizontal_margin"
+          android:layout_marginRight="@dimen/activity_horizontal_margin"
+          app:counterEnabled="true"
+          fresco:counterMaxLength="60"
+          >
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/topic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/prompt_topic"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:singleLine="true"/>
+
+      </android.support.design.widget.TextInputLayout>
+
+      <android.support.design.widget.TextInputLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginLeft="@dimen/activity_horizontal_margin"
+          android:layout_marginRight="@dimen/activity_horizontal_margin"
+          >
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/prompt_description"
+            android:inputType="textCapSentences"
+            android:lines="3"
+            android:singleLine="true"/>
+
+      </android.support.design.widget.TextInputLayout>
+
+      <RelativeLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:layout_marginTop="@dimen/spacingLarge"
+          android:layout_marginLeft="@dimen/activity_horizontal_margin"
+          android:layout_marginRight="@dimen/activity_horizontal_margin"
+          >
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/timeIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/startDate"
+            android:layout_alignBottom="@+id/startDate"
+            android:gravity="center"
+            android:textSize="@dimen/fontIconMedium"
+            android:textColor="@color/dusty_gray"
+            android:text="@string/ic_access_time"
+            />
+
+        <TextView
+            android:id="@+id/startDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:layout_toRightOf="@+id/timeIcon"
+            android:textSize="@dimen/textSizeMedium"
+            tools:text="Sat, Jun 26, 2016"
+            />
+
+        <TextView
+            android:id="@+id/startTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:textSize="@dimen/textSizeMedium"
+            tools:text="17:00"
+            />
+
+        <TextView
+            android:id="@+id/endDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/startDate"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:layout_toRightOf="@+id/timeIcon"
+            android:textSize="@dimen/textSizeMedium"
+            tools:text="Sat, Jun 26, 2016"
+            />
+
+        <TextView
+            android:id="@+id/endTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/startTime"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"
+            android:textSize="@dimen/textSizeMedium"
+            tools:text="17:00"
+            />
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/locationIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/endDate"
+            android:layout_alignTop="@+id/location"
+            android:layout_alignBottom="@+id/location"
+            android:gravity="center"
+            android:textSize="@dimen/fontIconMedium"
+            android:textColor="@color/dusty_gray"
+            android:text="@string/ic_location_on"
+            />
+
+        <TextView
+            android:id="@+id/location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/endDate"
+            android:layout_toRightOf="@+id/locationIcon"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/textSizeMedium"
+            android:text="@string/set_location"
+            />
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/tagIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/endDate"
+            android:layout_alignTop="@+id/tagTitle"
+            android:layout_alignBottom="@+id/tagTitle"
+            android:gravity="center"
+            android:textSize="@dimen/fontIconMedium"
+            android:textColor="@color/dusty_gray"
+            android:text="@string/ic_label"
+            />
+
+        <TextView
+            android:id="@+id/tagTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/location"
+            android:layout_toRightOf="@+id/tagIcon"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/textSizeMedium"
+            android:text="@string/add_tags"
+            />
+
+        <com.sampsonjoliver.firestarter.views.FontIconView
+            android:id="@+id/addTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/location"
+            android:layout_alignParentRight="true"
+            android:minHeight="@dimen/touchable"
+            android:minWidth="@dimen/touchable"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            android:textSize="@dimen/fontIconMedium"
+            android:text="@string/ic_add"
+            />
+
+        <org.apmem.tools.layouts.FlowLayout
+            android:id="@+id/tagContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+        </org.apmem.tools.layouts.FlowLayout>
+
+      </RelativeLayout>
+    </LinearLayout>
+  </ScrollView>
+</LinearLayout>

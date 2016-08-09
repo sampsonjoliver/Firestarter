@@ -31,4 +31,10 @@
   <string name="google_services_disconnected">Connection to Google Services has been lost. We\'ll try getting them back again…</string>
   <string name="google_services_required_title">Google Play Services Required</string>
   <string name="google_services_required_message">We\'ve detected your device either doesn\'t have or is incompatible with the Google Play Services. Unfortunately we need these present to handle our shiny location-aware features. So we\'ll let you proceed, but things might be not that awesome.</string>
+  <string name="prompt_description">Description</string>
+  <string name="prompt_topic">Topic</string>
+  <string name="set_location">Tap to set location</string>
+  <string name="save">Save</string>
+  <string name="add_tags">Tags</string>
+  <string name="leave">Leave</string>
 </resources>

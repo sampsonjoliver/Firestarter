@@ -9,6 +9,7 @@ import com.google.android.gms.maps.model.LatLng
 
 object IntentUtils {
     val RC_SIGN_IN = 100
+    val REQUEST_PLACE_PICKER = 101
 
     val MAP_GEO_URI = "geo:%f,%f?q=%f,%f"
     val MAP_GEO_LABELLED_URI = "geo:%f,%f?q=%f,%f(%s)"

@@ -36,21 +36,25 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
-    compile 'com.google.android.gms:play-services-auth:9.0.2'
-    compile 'com.google.android.gms:play-services-maps:9.0.2'
-    compile 'com.android.support:appcompat-v7:23.4.0'
-    compile 'com.android.support:design:23.4.0'
+    compile 'com.google.android.gms:play-services-auth:9.2.1'
+    compile 'com.google.android.gms:play-services-maps:9.2.1'
+    compile 'com.google.android.gms:play-services-places:9.2.1'
+    compile 'com.google.android.gms:play-services-location:9.2.1'
+    compile 'com.android.support:appcompat-v7:24.1.0'
+    compile 'com.android.support:design:24.1.0'
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-    compile 'com.google.firebase:firebase-core:9.0.2'
-    compile 'com.google.firebase:firebase-messaging:9.0.2'
-    compile 'com.google.firebase:firebase-database:9.0.2'
-    compile 'com.google.firebase:firebase-auth:9.0.2'
-    compile 'com.google.firebase:firebase-storage:9.0.2'
-    compile 'com.google.firebase:firebase-crash:9.0.2'
-    compile 'com.google.firebase:firebase-invites:9.0.2'
-    compile 'com.google.firebase:firebase-ads:9.0.2'
+    compile 'com.google.firebase:firebase-core:9.2.0'
+    compile 'com.google.firebase:firebase-messaging:9.2.0'
+    compile 'com.google.firebase:firebase-database:9.2.0'
+    compile 'com.google.firebase:firebase-auth:9.2.0'
+    compile 'com.google.firebase:firebase-storage:9.2.0'
+    compile 'com.google.firebase:firebase-crash:9.2.0'
+    compile 'com.google.firebase:firebase-invites:9.2.0'
+    compile 'com.google.firebase:firebase-ads:9.2.0'
+    compile 'com.firebase:geofire-android:2.0.0'
     compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.facebook.fresco:fresco:0.11.0'
+    compile 'org.apmem.tools:layouts:1.10@aar'
 }
 repositories {
     mavenCentral()
