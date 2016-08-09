@@ -47,7 +47,7 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
 
             itemView.distance.appear = location != null
             if (location != null) {
-                itemView.distance.text = DistanceUtils.formatDistance(LatLng(location?.latitude ?: 0.0, location?.longitude ?: 0.0), session.location)
+                itemView.distance.text = DistanceUtils.formatDistance(LatLng(location?.latitude ?: 0.0, location?.longitude ?: 0.0), session.getLocation())
             }
 
             itemView.time.text = DateUtils.getRelativeTimeSpanString(
