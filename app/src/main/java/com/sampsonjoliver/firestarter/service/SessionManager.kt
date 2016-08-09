@@ -49,6 +49,7 @@ object SessionManager {
     }
 
     fun getUid() = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+    fun getUsername() = FirebaseAuth.getInstance().currentUser?.displayName ?: ""
 
     fun getUserPhotoUrl(): String {
         return FirebaseAuth.getInstance().currentUser?.providerData?.find { it.photoUrl?.toString().isNullOrBlank().not() }?.photoUrl?.toString() ?: ""
