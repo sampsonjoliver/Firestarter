@@ -4,7 +4,6 @@ import android.content.Intent
 import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
@@ -15,10 +14,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.ChildEventListener
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.sampsonjoliver.firestarter.LocationAwareActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
@@ -28,6 +24,7 @@ import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.insertSorted
 import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
+import com.sampsonjoliver.firestarter.views.channel.create.CreateChannelActivity
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main.*
@@ -137,7 +134,9 @@ class HomeActivity : LocationAwareActivity(),
         setContentView(R.layout.activity_home)
         setSupportActionBar(toolbar)
 
-        fab.setOnClickListener { view -> Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show() }
+        fab.setOnClickListener {
+            startActivity(Intent(this, CreateChannelActivity::class.java))
+        }
 
         val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
         drawerLayout?.addDrawerListener(toggle)
@@ -156,6 +155,26 @@ class HomeActivity : LocationAwareActivity(),
             if (savedInstanceState.keySet().contains(LOCATION_KEY))
                 adapter?.location = savedInstanceState.getParcelable(LOCATION_KEY)
         }
+    }
+
+    fun joinSession(sessionId: String) {
+        FirebaseService.getReference(References.SessionSubscriptions)
+                .child(sessionId)
+                .runTransaction(object : Transaction.Handler {
+            override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+            }
+
+            override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                val obj = mutableData?.getValue(MutableMap::class.java) as? MutableMap<String, Any?>
+
+                obj?.put("numUsers", (obj.get("numUsers") as? Int)?.inc())
+                obj?.put(SessionManager.getUid(), true)
+
+                mutableData?.value = obj
+                return Transaction.success(mutableData)
+            }
+        })
     }
 
     fun attachDataWatcher(detach: Boolean = false) {

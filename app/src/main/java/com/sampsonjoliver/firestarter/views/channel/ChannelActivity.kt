@@ -1,17 +1,20 @@
 package com.sampsonjoliver.firestarter.views.channel
 
+import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.text.format.DateUtils
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.*
-import com.sampsonjoliver.firestarter.FirebaseActivity
+import com.sampsonjoliver.firestarter.LocationAwareActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Message
 import com.sampsonjoliver.firestarter.models.Session
@@ -24,14 +27,16 @@ import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.copyToClipboard
 import kotlinx.android.synthetic.main.activity_channel.*
 
-class ChannelActivity : FirebaseActivity(),
+class ChannelActivity : LocationAwareActivity(),
         ChannelMessageRecyclerAdapter.ChatListener,
         ChildEventListener {
+
     companion object {
         const val EXTRA_SESSION_ID = "EXTRA_SESSION_ID"
     }
 
     var session: Session? = null
+    var location: Location? = null
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
     val adapter by lazy { ChannelMessageRecyclerAdapter(SessionManager.getUid(), this) }
 
@@ -61,9 +66,20 @@ class ChannelActivity : FirebaseActivity(),
             collapsingToolbar.title = session?.topic
             time.text = DateUtils.formatDateRange(this@ChannelActivity, session?.startDate ?: 0, session?.startDate?.plus(session.durationMs) ?: 0, DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_TIME)
 
-            val geoDistance = DistanceUtils.latLngDistance(session?.location ?: LatLng(0.0, 0.0), LatLng(0.0, 0.0))
-            distance.text = DistanceUtils.formatDistance(geoDistance[0])
+            onLocationChanged(this@ChannelActivity.location)
         }
+    }
+
+    override fun onLocationChanged(location: Location?) {
+        this@ChannelActivity.location = location
+
+        val geoDistance = DistanceUtils.latLngDistance(session?.getLocation() ?: LatLng(0.0, 0.0), LatLng(location?.latitude ?: 0.0, location?.longitude ?: 0.0))
+        distance.text = DistanceUtils.formatDistance(geoDistance[0])
+    }
+
+    override fun onConnected(connectionHint: Bundle?) {
+        super.onConnected(connectionHint)
+        startLocationUpdatesWithChecks()
     }
 
     override fun onItemInsertedListener() {
@@ -112,6 +128,41 @@ class ChannelActivity : FirebaseActivity(),
                 Toast.LENGTH_SHORT).show()
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_channel, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.menu_leave -> {
+                sessionId?.let { leaveSession(it) }
+                return true
+            }
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun leaveSession(sessionId: String) {
+        FirebaseService.getReference(References.SessionSubscriptions)
+                .child(sessionId)
+                .runTransaction(object : Transaction.Handler {
+            override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+            }
+
+            override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                val obj = mutableData?.getValue(MutableMap::class.java) as? MutableMap<String, Any?>
+
+                obj?.put("numUsers", (obj.get("numUsers") as? Int)?.dec())
+                obj?.put(SessionManager.getUid(), false)
+
+                mutableData?.value = obj
+                return Transaction.success(mutableData)
+            }
+        })
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -124,8 +175,8 @@ class ChannelActivity : FirebaseActivity(),
         messageText.setOnClickListener { appBarLayout.setExpanded(false, true) }
 
         distance.setOnClickListener {
-            if (session?.location != null)
-                IntentUtils.launchMaps(this@ChannelActivity, session?.location!!, session?.topic)
+            if (session?.getLocation() != null)
+                IntentUtils.launchMaps(this@ChannelActivity, session?.getLocation()!!, session?.topic)
         }
 
         recycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
@@ -195,6 +246,5 @@ class ChannelActivity : FirebaseActivity(),
         super.onDestroy()
 
         attachDataListener(true)
-
     }
 }
