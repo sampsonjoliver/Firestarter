@@ -37,4 +37,5 @@
   <string name="save">Save</string>
   <string name="add_tags">Tags</string>
   <string name="leave">Leave</string>
+  <string name="create_session_save_error">An error occurred creating the session</string>
 </resources>

@@ -5,6 +5,7 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.text.format.DateUtils
 import android.util.Log
 import android.view.Menu
@@ -181,15 +182,19 @@ class CreateChannelActivity : FirebaseActivity() {
                 .push()
                 .setValue(session, DatabaseReference.CompletionListener { databaseError, databaseReference ->
                     Log.w(this@CreateChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
-                    finish()
-                })
 
-//        FirebaseService.getReference(References.SessionSubscriptions)
-//                .push()
-//                .setValue(session, DatabaseReference.CompletionListener { databaseError, databaseReference ->
-//                    Log.w(this@CreateChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
-//                    finish()
-//                })
+                    if (databaseError != null) {
+                        FirebaseService.getReference(References.SessionSubscriptions)
+                                .child(databaseReference.key)
+                                .child(SessionManager.getUid())
+                                .setValue(true, DatabaseReference.CompletionListener { databaseError, databaseReference ->
+                                    Log.w(this@CreateChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
+                                    finish()
+                                })
+                    } else {
+                        Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show()
+                    }
+                })
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

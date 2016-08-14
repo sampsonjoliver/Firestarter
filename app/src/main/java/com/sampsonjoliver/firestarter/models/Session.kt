@@ -20,20 +20,16 @@ class Session(
 ) {
     @Exclude var sessionId: String? = null
     @Exclude var startDateAsDate: Date = Date()
-        get() = Date(startDate)
-        set
+        @Exclude get() = Date(startDate)
 
     @Exclude var endDate: Long = 0
-        get() = startDate + durationMs
-        set
+        @Exclude get() = startDate + durationMs
 
     @Exclude var endDateAsDate: Date = Date()
-        get() = Date(startDate + durationMs)
-        set
+        @Exclude get() = Date(startDate + durationMs)
 
-    fun getLocation(): LatLng = LatLng(lat, lng)
-    fun setLocation(value: LatLng) {
-
+    @Exclude fun getLocation(): LatLng = LatLng(lat, lng)
+    @Exclude fun setLocation(value: LatLng) {
             lat = value.latitude
             lng = value.longitude
         }
