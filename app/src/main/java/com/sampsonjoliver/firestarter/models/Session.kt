@@ -14,7 +14,7 @@ class Session(
         var lng: Double,
         var address: String,
         var url: String,
-        var tags: Map<String, Boolean>,
+        var tags: MutableMap<String, Boolean>,
         var startDate: Long,
         var durationMs: Long
 ) {
@@ -34,5 +34,5 @@ class Session(
             lng = value.longitude
         }
 
-    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", emptyMap(), 0, 0)
+    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", mutableMapOf(), 0, 0)
 }

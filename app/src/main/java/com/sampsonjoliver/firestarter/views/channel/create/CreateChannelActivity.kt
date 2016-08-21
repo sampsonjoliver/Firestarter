@@ -10,6 +10,9 @@ import android.text.format.DateUtils
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.widget.TextView
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.location.places.ui.PlacePicker
@@ -22,12 +25,17 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.IntentUtils
 import com.sampsonjoliver.firestarter.utils.TAG
+import com.sampsonjoliver.firestarter.utils.inflate
 import com.sampsonjoliver.firestarter.views.dialogs.DatePickerDialogFragment
+import com.sampsonjoliver.firestarter.views.dialogs.FormDialog
 import com.sampsonjoliver.firestarter.views.dialogs.TimePickerDialogFragment
 import kotlinx.android.synthetic.main.activity_create_channel.*
 import java.util.*
 
 class CreateChannelActivity : FirebaseActivity() {
+    companion object {
+        val BUNDLE_TAG_TAG = "BUNDLE_TAG_TAG"
+    }
 
     val calendarHolder = Calendar.getInstance()
 
@@ -154,6 +162,40 @@ class CreateChannelActivity : FirebaseActivity() {
                 // ...
             }
         }
+
+        addTag.setOnClickListener {
+            FormDialog(this).addInputText(getString(R.string.create_session_tag_hint), BUNDLE_TAG_TAG, EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS, {
+                if (it is String && it.isNullOrBlank().not())
+                    null
+                else
+                    getString(R.string.session_tag_error)
+            }).build(getString(R.string.create_session_tag_title), getString(R.string.cancel), getString(R.string.add), { bundle ->
+                val tagName = bundle.getString(BUNDLE_TAG_TAG)
+                session.tags.getOrPut(tagName, {
+                    tagContainer.addView(getTagView(tagName))
+                    true
+                })
+            }).show()
+        }
+    }
+
+    fun getTagView(tagName: String): View {
+            val view = tagContainer.inflate(R.layout.item_session_tag_chip, false)
+            view.setOnClickListener {
+                FormDialog(this).addInputText(getString(R.string.create_session_tag_hint), BUNDLE_TAG_TAG, tagName, EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS, {
+                    if (it is String && it.isNullOrBlank().not())
+                        null
+                    else
+                        getString(R.string.session_tag_error)
+                }).build(getString(R.string.edit_session_tag_title), getString(R.string.cancel), getString(R.string.add),
+                        { (view as? TextView)?.text = it.getString(BUNDLE_TAG_TAG) },
+                        { dialogInterface, int ->
+                            tagContainer.removeView(view)
+                            session.tags.remove(tagName)
+                        }
+                ).show()
+            }
+        return view
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

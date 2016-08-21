@@ -28,9 +28,8 @@ abstract class FirebaseActivity : AppCompatActivity(),
         SessionManager.startSession(this, this)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
+    override fun onStop() {
+        super.onStop()
         SessionManager.stopSession()
     }
 }

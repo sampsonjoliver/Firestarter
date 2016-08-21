@@ -35,7 +35,12 @@
   <string name="prompt_topic">Topic</string>
   <string name="set_location">Tap to set location</string>
   <string name="save">Save</string>
+  <string name="add">Add</string>
   <string name="add_tags">Tags</string>
   <string name="leave">Leave</string>
   <string name="create_session_save_error">An error occurred creating the session</string>
+  <string name="create_session_tag_title">Edit Tag</string>
+  <string name="edit_session_tag_title">Add tag</string>
+  <string name="create_session_tag_hint">Tag name</string>
+  <string name="session_tag_error">Enter a valid text string</string>
 </resources>
