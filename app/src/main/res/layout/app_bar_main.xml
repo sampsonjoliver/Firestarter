@@ -5,12 +5,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     tools:context=".views.main.HomeActivity">
 
   <android.support.design.widget.AppBarLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
+      app:elevation="@dimen/design_appbar_elevation"
       android:theme="@style/AppTheme.AppBarOverlay">
 
     <android.support.v7.widget.Toolbar
@@ -24,14 +24,27 @@
 
   <include layout="@layout/content_main"/>
 
+  <android.support.v7.widget.RecyclerView
+      android:id="@+id/recycler"
+      android:layout_width="match_parent"
+      android:layout_height="400dp"
+      android:layout_alignParentBottom="true"
+      android:background="@color/white"
+      app:layout_behavior="@string/bottom_sheet_behavior"
+      android:elevation="@dimen/design_bottom_sheet_modal_elevation"
+      app:behavior_peekHeight="100dp"
+      />
+
   <android.support.design.widget.FloatingActionButton
       android:id="@+id/fab"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_gravity="bottom|end"
       android:layout_margin="@dimen/fab_margin"
       android:src="@drawable/ic_add_black_24dp"
+      app:elevation="@dimen/design_bottom_sheet_modal_elevation"
       android:tint="@color/white"
+      app:layout_anchor="@id/recycler"
+      app:layout_anchorGravity="top|end"
       />
 
 </android.support.design.widget.CoordinatorLayout>
