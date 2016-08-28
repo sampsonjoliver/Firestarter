@@ -2,6 +2,7 @@ package com.sampsonjoliver.firestarter.views.channel
 
 import android.location.Location
 import android.os.Bundle
+import android.support.design.widget.AppBarLayout
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.text.format.DateUtils
@@ -38,6 +39,7 @@ class ChannelActivity : LocationAwareActivity(),
     var session: Session? = null
     var location: Location? = null
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
+    var isSessionOwner: Boolean = false
     val adapter by lazy { ChannelMessageRecyclerAdapter(SessionManager.getUid(), this) }
 
     val sessionSubscriberListener = object : ValueEventListener {
@@ -58,9 +60,12 @@ class ChannelActivity : LocationAwareActivity(),
 
         override fun onDataChange(p0: DataSnapshot?) {
             Log.w(this@ChannelActivity.TAG, "onDataChange: ${p0?.key}")
+
             val session = p0?.getValue(Session::class.java)
             session?.sessionId = p0?.key
             this@ChannelActivity.session = session
+            isSessionOwner = session?.userId == SessionManager.getUid()
+            supportInvalidateOptionsMenu()
 
             banner.setImageURI(session?.bannerUrl)
             collapsingToolbar.title = session?.topic
@@ -92,7 +97,6 @@ class ChannelActivity : LocationAwareActivity(),
     }
 
     override fun onChildMoved(p0: DataSnapshot?, previousChildName: String?) = Unit
-
     override fun onChildChanged(p0: DataSnapshot?, previousChildName: String?) {
         Log.w(this.TAG, "onChildChanged: ${p0?.key}")
 
@@ -103,14 +107,10 @@ class ChannelActivity : LocationAwareActivity(),
         // op with our current data model
     }
 
-    override fun onChildAdded(p0: DataSnapshot?, previousChildName: String?) {
-        Log.w(this.TAG, "onChildAdded: ${p0?.key}")
-
-        val key = p0?.key ?: ""
-        val message = p0?.getValue(Message::class.java)
-
-        message?.let {
-            adapter.addMessage(message)
+    override fun onChildAdded(dataSnapshot: DataSnapshot?, previousChildName: String?) {
+        Log.w(this.TAG, "onChildAdded: ${dataSnapshot?.key}")
+        dataSnapshot?.getValue(Message::class.java)?.let {
+            adapter.addMessage(it)
         }
     }
 
@@ -130,37 +130,23 @@ class ChannelActivity : LocationAwareActivity(),
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_channel, menu)
+        menu?.findItem(R.id.menu_leave)?.isVisible = isSessionOwner.not()
         return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.findItem(R.id.menu_leave)?.isVisible = isSessionOwner.not()
+        return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.menu_leave -> {
-                sessionId?.let { leaveSession(it) }
+                sessionId?.let { FirebaseService.updateSessionSubscription(it, true, { finish() }) }
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
         }
-    }
-
-    fun leaveSession(sessionId: String) {
-        FirebaseService.getReference(References.SessionSubscriptions)
-                .child(sessionId)
-                .runTransaction(object : Transaction.Handler {
-            override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
-                Log.d(TAG, "postTransaction:onComplete:" + databaseError)
-            }
-
-            override fun doTransaction(mutableData: MutableData?): Transaction.Result {
-                val obj = mutableData?.getValue(MutableMap::class.java) as? MutableMap<String, Any?>
-
-                obj?.put("numUsers", (obj.get("numUsers") as? Int)?.dec())
-                obj?.put(SessionManager.getUid(), false)
-
-                mutableData?.value = obj
-                return Transaction.success(mutableData)
-            }
-        })
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -171,6 +157,13 @@ class ChannelActivity : LocationAwareActivity(),
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         collapsingToolbar.isTitleEnabled = true
+        appBarLayout.addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
+            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
+                // todo as the appbar collapses, fade the headerInfoGroup
+//                headerInfoGroup.alpha =
+            }
+
+        })
         toolbar.setOnClickListener { appBarLayout.setExpanded(true, true) }
         messageText.setOnClickListener { appBarLayout.setExpanded(false, true) }
 
