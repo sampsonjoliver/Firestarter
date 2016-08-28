@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.text.format.DateUtils
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -16,12 +15,10 @@ import android.widget.TextView
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.location.places.ui.PlacePicker
-import com.google.firebase.database.DatabaseReference
 import com.sampsonjoliver.firestarter.FirebaseActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
-import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.IntentUtils
 import com.sampsonjoliver.firestarter.utils.TAG
@@ -220,23 +217,7 @@ class CreateChannelActivity : FirebaseActivity() {
     }
 
     fun saveChannel() {
-        FirebaseService.getReference(References.Sessions)
-                .push()
-                .setValue(session, DatabaseReference.CompletionListener { databaseError, databaseReference ->
-                    Log.w(this@CreateChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
-
-                    if (databaseError != null) {
-                        FirebaseService.getReference(References.SessionSubscriptions)
-                                .child(databaseReference.key)
-                                .child(SessionManager.getUid())
-                                .setValue(true, DatabaseReference.CompletionListener { databaseError, databaseReference ->
-                                    Log.w(this@CreateChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
-                                    finish()
-                                })
-                    } else {
-                        Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show()
-                    }
-                })
+        FirebaseService.createSession(session, { finish() }, { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() })
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
