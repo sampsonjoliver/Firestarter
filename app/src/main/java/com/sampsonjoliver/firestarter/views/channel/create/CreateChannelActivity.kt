@@ -76,6 +76,7 @@ class CreateChannelActivity : FirebaseActivity() {
 
         setContentView(R.layout.activity_create_channel)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         setStartTime(Date().time)
         setEndTime(session.startDate + 1000 * 60 * 60 * 2)
