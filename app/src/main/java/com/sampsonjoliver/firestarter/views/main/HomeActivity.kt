@@ -43,7 +43,7 @@ import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
 import com.sampsonjoliver.firestarter.views.channel.create.CreateChannelActivity
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_main.*
-import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.android.synthetic.main.content_main_peekbar.*
 
 class HomeActivity : LocationAwareActivity(),
         NavigationView.OnNavigationItemSelectedListener,
@@ -83,12 +83,12 @@ class HomeActivity : LocationAwareActivity(),
                         .child(key)
                         .removeEventListener(subscribedSessionListener)
 
-                adapter?.subscribedSessions?.indexOfFirst { it.sessionId == key }.whenNotEqual(-1) {
-                    it?.let {
-                        adapter?.notifyItemRemoved(adapter.subscribedSessionIndexToAdapterIndex(it))
-                        adapter?.subscribedSessions?.removeAt(it)
-                        if (adapter?.subscribedSessions?.size == 0)
-                            adapter?.notifyItemChanged(adapter.getSubscribedHeaderIndex())
+                adapter.subscribedSessions.indexOfFirst { it.sessionId == key }.whenNotEqual(-1) {
+                    it.let {
+                        adapter.notifyItemRemoved(adapter.subscribedSessionIndexToAdapterIndex(it))
+                        adapter.subscribedSessions.removeAt(it)
+                        if (adapter.subscribedSessions.size == 0)
+                            adapter.notifyItemChanged(adapter.getSubscribedHeaderIndex())
                     }
                 }
             }
@@ -110,17 +110,17 @@ class HomeActivity : LocationAwareActivity(),
 
             dataSnapshot?.getValue(Session::class.java)?.let { session ->
                 session.sessionId = dataSnapshot.key
-                var index = adapter?.subscribedSessions?.indexOfFirst { it.sessionId == session.sessionId } ?: -1
+                var index = adapter.subscribedSessions.indexOfFirst { it.sessionId == session.sessionId }
 
                 if (index == -1) {
-                    index = adapter?.subscribedSessions?.insertSorted(session) { it.topic } ?: -1
-                    if (adapter?.subscribedSessions?.size == 1) {
-                        adapter?.notifyItemInserted(adapter.getSubscribedHeaderIndex())
+                    index = adapter.subscribedSessions.insertSorted(session) { it.topic }
+                    if (adapter.subscribedSessions.size == 1) {
+                        adapter.notifyItemInserted(adapter.getSubscribedHeaderIndex())
                     }
-                    adapter?.notifyItemInserted(adapter.subscribedSessionIndexToAdapterIndex(index))
+                    adapter.notifyItemInserted(adapter.subscribedSessionIndexToAdapterIndex(index))
                 } else {
-                    adapter?.subscribedSessions?.set(index, session)
-                    adapter?.notifyItemChanged(adapter.subscribedSessionIndexToAdapterIndex(index))
+                    adapter.subscribedSessions.set(index, session)
+                    adapter.notifyItemChanged(adapter.subscribedSessionIndexToAdapterIndex(index))
                 }
             }
         }
@@ -136,14 +136,14 @@ class HomeActivity : LocationAwareActivity(),
 
             dataSnapshot?.getValue(Session::class.java)?.let { session ->
                 session.sessionId = dataSnapshot.key
-                var index = adapter?.nearbySessions?.indexOfFirst { it.sessionId == session.sessionId } ?: -1
+                var index = adapter.nearbySessions.indexOfFirst { it.sessionId == session.sessionId }
 
                 if (index == -1) {
-                    index = adapter?.nearbySessions?.insertSorted(session) { it.topic } ?: -1
-                    adapter?.notifyItemInserted(adapter.nearbySessionIndexToAdapterIndex(index))
+                    index = adapter.nearbySessions.insertSorted(session) { it.topic }
+                    adapter.notifyItemInserted(adapter.nearbySessionIndexToAdapterIndex(index))
                 } else {
-                    adapter?.nearbySessions?.set(index, session)
-                    adapter?.notifyItemChanged(adapter.nearbySessionIndexToAdapterIndex(index))
+                    adapter.nearbySessions.set(index, session)
+                    adapter.notifyItemChanged(adapter.nearbySessionIndexToAdapterIndex(index))
                 }
             }
         }
@@ -225,10 +225,12 @@ class HomeActivity : LocationAwareActivity(),
             isIndoorLevelPickerEnabled = false
         }
         googleMap?.setOnCameraChangeListener(this)
+
         googleMap?.setOnMapClickListener {
             behavior.state = BottomSheetBehavior.STATE_COLLAPSED
             bindOverlayData(emptyList(), adapter.location)
         }
+
         googleMap?.setOnMarkerClickListener { marker ->
             val sessionsAtMarker = adapter.nearbySessions.filter { it.getLocation() == marker.position }
                     .plus(adapter.subscribedSessions.filter { it.getLocation() == marker.position })
@@ -242,7 +244,8 @@ class HomeActivity : LocationAwareActivity(),
     }
 
     fun bindOverlayData(sessions: List<Session>, userLocation: Location?) {
-        itemOverlay.appear = sessions.isNotEmpty()
+        if (sessions.isEmpty()) peekbar.hideView() else peekbar.showView()
+
         if (sessions.size > 1) {
             sessionImage.appear = false
             sessionName.text = getString(R.string.n_sessions_at_location, sessions.size)
@@ -253,6 +256,14 @@ class HomeActivity : LocationAwareActivity(),
             sessionImage.setImageURI(sessions.first().bannerUrl)
             sessionName.text = sessions.first().topic
             sessionDistance.text = DistanceUtils.formatDistance(LatLng(userLocation?.latitude ?: 0.0, userLocation?.longitude ?: 0.0), sessions.first().getLocation())
+
+            itemOverlay.setOnClickListener {
+                startActivity(Intent(this@HomeActivity, ChannelActivity::class.java).apply {
+                    putExtra(ChannelActivity.EXTRA_SESSION_ID, sessions.first().sessionId)
+                })
+            }
+        } else {
+            itemOverlay.setOnClickListener(null)
         }
     }
 
@@ -332,6 +343,7 @@ class HomeActivity : LocationAwareActivity(),
         recycler.adapter = adapter
         recycler.layoutManager = LinearLayoutManager(this)
         (recycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
+
     }
 
     private fun updateValuesFromBundle(savedInstanceState: Bundle?) {
@@ -352,7 +364,8 @@ class HomeActivity : LocationAwareActivity(),
         val userSubscriptionQuery = FirebaseService
                 .getReference(References.UserSubscriptions)
                 .child(SessionManager.getUid())
-                .orderByChild("startDate")
+                .orderByValue()
+                .equalTo(true)
 
         if (detach) {
             sessionQuery.removeEventListener(sessionSubscriptionListener)
