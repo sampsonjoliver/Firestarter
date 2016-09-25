@@ -73,6 +73,12 @@ object FirebaseService {
                                         })
                             }
                         }
+
+                        FirebaseService.getReference(References.SessionSubscriptions)
+                                .child(databaseReference.key)
+                                .child(References.NumUsers)
+                                .setValue(0)
+
                     } else {
                         onError()
                     }
@@ -82,52 +88,95 @@ object FirebaseService {
     fun updateSessionSubscription(sessionId: String, isUnsubscribe: Boolean, onFinish: () -> Unit = {}) {
         val otherTasksDone = AtomicInteger(0)
 
-        FirebaseService.getReference(References.SessionSubscriptions)
-                .child(sessionId).child(References.NumUsers)
-                .runTransaction(object : Transaction.Handler {
-                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
-                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
-                        if (otherTasksDone.incrementAndGet() == 3) {
-                            onFinish()
-                        }
-                    }
-
-                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
-                        mutableData?.value = (mutableData?.value as? Long)?.apply {
-                            if (isUnsubscribe) dec() else inc()
-                        }
-                        return Transaction.success(mutableData)
-                    }
-                })
-
-        FirebaseService.getReference(References.SessionSubscriptions)
-                .child(sessionId).child(SessionManager.getUid())
-                .runTransaction(object : Transaction.Handler {
-                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
-                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
-                        if (otherTasksDone.incrementAndGet() == 3) {
-                            onFinish()
-                        }
-                    }
-
-                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
-                        mutableData?.value = isUnsubscribe.not()
-                        return Transaction.success(mutableData)
-                    }
-                })
+        if (isUnsubscribe) {
+            leaveSession(sessionId) {
+                if (otherTasksDone.incrementAndGet() == 2) {
+                    onFinish()
+                }
+            }
+        } else {
+            joinSession(sessionId) {
+                if (otherTasksDone.incrementAndGet() == 2) {
+                    onFinish()
+                }
+            }
+        }
 
         FirebaseService.getReference(References.UserSubscriptions)
                 .child(SessionManager.getUid()).child(sessionId)
                 .runTransaction(object : Transaction.Handler {
                     override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
                         Log.d(TAG, "postTransaction:onComplete:" + databaseError)
-                        if (otherTasksDone.incrementAndGet() == 3) {
+                        if (otherTasksDone.incrementAndGet() == 2) {
                             onFinish()
                         }
                     }
 
                     override fun doTransaction(mutableData: MutableData?): Transaction.Result {
                         mutableData?.value = isUnsubscribe.not()
+                        return Transaction.success(mutableData)
+                    }
+                })
+    }
+
+    private fun leaveSession(sessionId: String, onFinish: () -> Unit = {}) {
+        FirebaseService.getReference(References.SessionSubscriptions)
+                .child(sessionId).child(References.NumUsers)
+                .runTransaction(object : Transaction.Handler {
+                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+
+                        // Now we can leave the session
+                        FirebaseService.getReference(References.SessionSubscriptions)
+                                .child(sessionId).child(SessionManager.getUid())
+                                .runTransaction(object : Transaction.Handler {
+                                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+                                        onFinish()
+                                    }
+
+                                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                                        mutableData?.value = false
+                                        return Transaction.success(mutableData)
+                                    }
+                                })
+
+                    }
+
+                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                        val numUsers = (mutableData?.value as? Long)
+                        mutableData?.value = numUsers?.run { dec() } ?: 0
+                        return Transaction.success(mutableData)
+                    }
+                })
+    }
+
+    private fun joinSession(sessionId: String, onFinish: () -> Unit = {}) {
+        FirebaseService.getReference(References.SessionSubscriptions)
+                .child(sessionId).child(SessionManager.getUid())
+                .runTransaction(object : Transaction.Handler {
+                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+
+                        // Now update the user count
+                        FirebaseService.getReference(References.SessionSubscriptions)
+                                .child(sessionId).child(References.NumUsers)
+                                .runTransaction(object : Transaction.Handler {
+                                    override fun onComplete(databaseError: DatabaseError?, b: Boolean, dataSnapshot: DataSnapshot?) {
+                                        Log.d(TAG, "postTransaction:onComplete:" + databaseError)
+                                        onFinish()
+                                    }
+
+                                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                                        val numUsers = (mutableData?.value as? Long)
+                                        mutableData?.value = numUsers?.run { inc() } ?: 1
+                                        return Transaction.success(mutableData)
+                                    }
+                                })
+                    }
+
+                    override fun doTransaction(mutableData: MutableData?): Transaction.Result {
+                        mutableData?.value = true
                         return Transaction.success(mutableData)
                     }
                 })

@@ -2,7 +2,6 @@ package com.sampsonjoliver.firestarter.views.channel
 
 import android.location.Location
 import android.os.Bundle
-import android.support.design.widget.AppBarLayout
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.LinearLayoutManager
 import android.text.format.DateUtils
@@ -22,10 +21,7 @@ import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
 import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
-import com.sampsonjoliver.firestarter.utils.DistanceUtils
-import com.sampsonjoliver.firestarter.utils.IntentUtils
-import com.sampsonjoliver.firestarter.utils.TAG
-import com.sampsonjoliver.firestarter.utils.copyToClipboard
+import com.sampsonjoliver.firestarter.utils.*
 import kotlinx.android.synthetic.main.activity_channel.*
 
 class ChannelActivity : LocationAwareActivity(),
@@ -53,6 +49,25 @@ class ChannelActivity : LocationAwareActivity(),
         }
     }
 
+    val userSubscriptionListener = object : ValueEventListener {
+        override fun onCancelled(p0: DatabaseError?) {
+            Log.w("${this@ChannelActivity.TAG}:${this.TAG}", "onCancelled")
+        }
+
+        override fun onDataChange(p0: DataSnapshot?) {
+            Log.w("${this@ChannelActivity.TAG}:${this.TAG}", "onDataChange: ${p0?.key}")
+
+            setUserSubscriptionState(p0?.getValue(Boolean::class.java) ?: false)
+        }
+    }
+
+    fun setUserSubscriptionState(isUserSubscribed: Boolean) {
+        joinGroup.appear = !isUserSubscribed
+        bottomView.isEnabled = isUserSubscribed
+        messageText.isEnabled = isUserSubscribed
+        sendButton.isEnabled = isUserSubscribed
+    }
+
     val sessionListener = object : ValueEventListener {
         override fun onCancelled(p0: DatabaseError?) {
             Log.w(this@ChannelActivity.TAG, "onCancelled")
@@ -69,6 +84,7 @@ class ChannelActivity : LocationAwareActivity(),
 
             banner.setImageURI(session?.bannerUrl)
             collapsingToolbar.title = session?.topic
+            title = session?.topic
             time.text = DateUtils.formatDateRange(this@ChannelActivity, session?.startDate ?: 0, session?.startDate?.plus(session.durationMs) ?: 0, DateUtils.FORMAT_SHOW_TIME or DateUtils.FORMAT_ABBREV_TIME)
 
             onLocationChanged(this@ChannelActivity.location)
@@ -156,20 +172,17 @@ class ChannelActivity : LocationAwareActivity(),
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        collapsingToolbar.isTitleEnabled = true
-        appBarLayout.addOnOffsetChangedListener(object : AppBarLayout.OnOffsetChangedListener {
-            override fun onOffsetChanged(appBarLayout: AppBarLayout?, verticalOffset: Int) {
-                // todo as the appbar collapses, fade the headerInfoGroup
-//                headerInfoGroup.alpha =
-            }
-
-        })
         toolbar.setOnClickListener { appBarLayout.setExpanded(true, true) }
         messageText.setOnClickListener { appBarLayout.setExpanded(false, true) }
+        setUserSubscriptionState(false)
 
         distance.setOnClickListener {
             if (session?.getLocation() != null)
                 IntentUtils.launchMaps(this@ChannelActivity, session?.getLocation()!!, session?.topic)
+        }
+
+        sessionId?.let { sessionId ->
+            joinBtn.setOnClickListener { FirebaseService.updateSessionSubscription(sessionId, false) }
         }
 
         recycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true)
@@ -231,6 +244,16 @@ class ChannelActivity : LocationAwareActivity(),
                     when (detach) {
                         true -> this.removeEventListener(sessionSubscriberListener)
                         else -> this.addValueEventListener(sessionSubscriberListener)
+                    }
+                }
+
+        FirebaseService.getReference(References.UserSubscriptions)
+                .child(SessionManager.getUid())
+                .child(sessionId)
+                .run {
+                    when (detach) {
+                        true -> this.removeEventListener(userSubscriptionListener)
+                        false -> this.addValueEventListener(userSubscriptionListener)
                     }
                 }
     }
