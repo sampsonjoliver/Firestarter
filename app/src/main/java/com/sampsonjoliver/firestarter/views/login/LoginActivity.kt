@@ -22,6 +22,7 @@ import com.sampsonjoliver.firestarter.LaunchActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.utils.IntentUtils
 import com.sampsonjoliver.firestarter.utils.TAG
+import com.sampsonjoliver.firestarter.utils.appear
 import kotlinx.android.synthetic.main.activity_login.*
 
 /**
@@ -116,13 +117,13 @@ class LoginActivity : FirebaseActivity() {
 
         googleLogin.setScopes(signInOptions.scopeArray)
         googleLogin.setOnClickListener {
-            val signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
-            startActivityForResult(signInIntent, IntentUtils.RC_SIGN_IN);
+            val signInIntent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient)
+            startActivityForResult(signInIntent, IntentUtils.RC_SIGN_IN)
         }
     }
 
     fun handleGoogleSignIn(result: GoogleSignInResult) {
-        Log.d(TAG, "handleSignInResult: ${result.isSuccess}");
+        Log.d(TAG, "handleSignInResult: ${result.isSuccess}")
         if (result.isSuccess) {
             result.signInAccount?.let { account ->
                 onGoogleAccountSignin(account)
@@ -134,11 +135,15 @@ class LoginActivity : FirebaseActivity() {
     }
 
     fun onGoogleAccountSignin(account: GoogleSignInAccount) {
+        login_progress.appear = true
+
         Log.d(TAG, "firebaseAuthWithGoogle: ${account.id}");
         signinWithFirebase(GoogleAuthProvider.getCredential(account.idToken, null))
     }
 
     fun onFacebookAccountSignin(token: AccessToken) {
+        login_progress.appear = true
+
         Log.d(TAG, "handleFacebookAccessToken: $token")
         signinWithFirebase(FacebookAuthProvider.getCredential(token.token))
     }
@@ -151,8 +156,10 @@ class LoginActivity : FirebaseActivity() {
 
     fun showSignInFailed(exception: Exception? = null) {
         if (exception != null)
-            Log.w(TAG, "signInWithCredential", exception);
+            Log.w(TAG, "signInWithCredential", exception)
 
         Snackbar.make(facebookLogin, "Authentication failed.", Snackbar.LENGTH_SHORT).show()
+
+        login_progress.appear = false
     }
 }
