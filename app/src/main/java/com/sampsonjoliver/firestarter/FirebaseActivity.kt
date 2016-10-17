@@ -2,7 +2,6 @@ package com.sampsonjoliver.firestarter
 
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.views.login.LoginActivity
@@ -22,14 +21,13 @@ abstract class FirebaseActivity : AppCompatActivity(),
         })
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onResume() {
+        super.onResume()
         SessionManager.startSession(this, this)
     }
 
-    override fun onStop() {
-        super.onStop()
+    override fun onPause() {
+        super.onPause()
         SessionManager.stopSession()
     }
 }
