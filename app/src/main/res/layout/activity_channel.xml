@@ -201,11 +201,23 @@
       app:layout_behavior="com.sampsonjoliver.firestarter.views.channel.ChannelMessageBoxBehaviour"
       >
 
+    <com.sampsonjoliver.firestarter.views.FontIconView
+        android:id="@+id/photoButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:background="#DADADA"
+        android:text="@string/ic_add_a_photo"
+        android:textColor="@color/ic_click_selector"
+        android:textSize="30sp"
+        android:layout_alignParentLeft="true"/>
+
     <EditText
         android:id="@+id/messageText"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:paddingLeft="@dimen/spacingLarge"
+        android:layout_toRightOf="@id/photoButton"
         android:layout_toLeftOf="@+id/sendButton"
         android:layout_alignTop="@+id/sendButton"
         android:layout_alignBottom="@+id/sendButton"

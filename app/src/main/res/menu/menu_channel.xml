@@ -5,4 +5,8 @@
         android:title="@string/leave"
         app:showAsAction="collapseActionView"
       />
+  <item android:id="@+id/menu_content"
+        android:title="@string/shared_content"
+        app:showAsAction="collapseActionView"
+      />
 </menu>

@@ -191,6 +191,7 @@ class ChannelActivity : LocationAwareActivity(),
         attachDataListener()
 
         sendButton.setOnClickListener { sendNewMessage(messageText) }
+        photoButton.setOnClickListener {  }
 
         messageText.setOnEditorActionListener(TextView.OnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
