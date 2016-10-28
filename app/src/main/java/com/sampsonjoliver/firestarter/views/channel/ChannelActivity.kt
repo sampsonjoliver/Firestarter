@@ -1,8 +1,12 @@
 package com.sampsonjoliver.firestarter.views.channel
 
+import android.content.Intent
 import android.location.Location
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.support.design.widget.Snackbar
+import android.support.v4.content.FileProvider
 import android.support.v7.widget.LinearLayoutManager
 import android.text.format.DateUtils
 import android.util.Log
@@ -14,6 +18,8 @@ import android.widget.TextView
 import android.widget.Toast
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import com.sampsonjoliver.firestarter.LocationAwareActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Message
@@ -23,6 +29,10 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.*
 import kotlinx.android.synthetic.main.activity_channel.*
+import java.io.File
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ChannelActivity : LocationAwareActivity(),
         ChannelMessageRecyclerAdapter.ChatListener,
@@ -37,6 +47,8 @@ class ChannelActivity : LocationAwareActivity(),
     val sessionId: String? by lazy { intent.getStringExtra(EXTRA_SESSION_ID) }
     var isSessionOwner: Boolean = false
     val adapter by lazy { ChannelMessageRecyclerAdapter(SessionManager.getUid(), this) }
+
+    var currentPhotoPath: String? = null
 
     val sessionSubscriberListener = object : ValueEventListener {
         override fun onCancelled(p0: DatabaseError?) {
@@ -200,6 +212,10 @@ class ChannelActivity : LocationAwareActivity(),
             }
             false
         })
+
+        photoButton.setOnClickListener {
+            addPhoto()
+        }
     }
 
     fun sendNewMessage(messageWidget: EditText) {
@@ -210,8 +226,8 @@ class ChannelActivity : LocationAwareActivity(),
         }
     }
 
-    fun sendNewMessage(messageText: String, userId: String) {
-        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText)
+    fun sendNewMessage(messageText: String, userId: String, contentUri: String? = null) {
+        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText, contentUri)
 
         FirebaseService.getReference(References.Messages)
                 .child(sessionId)
@@ -263,5 +279,63 @@ class ChannelActivity : LocationAwareActivity(),
         super.onDestroy()
 
         attachDataListener(true)
+    }
+
+    fun addPhoto() {
+        dispatchTakePictureIntent()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            IntentUtils.REQUEST_IMAGE_CAPTURE -> {
+                data?.data?.run {
+                    FirebaseStorage.getInstance().getReference("${References.Images}/${this.lastPathSegment}")
+                            .putFile(this, StorageMetadata.Builder()
+                                    .setContentType("image/jpg")
+                                    .setCustomMetadata("uid", SessionManager.getUid())
+                                    .setCustomMetadata("sessionId", sessionId)
+                                    .build()
+                            ).addOnSuccessListener { sendNewMessage("", SessionManager.getUid(), it.downloadUrl.toString()) }
+                            .addOnFailureListener {  }
+                            .addOnProgressListener {  } // todo
+                }
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    fun dispatchTakePictureIntent() {
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(packageManager) != null) {
+            // Create the File where the photo should go
+            val photoFile: File
+            try {
+                photoFile = createImageFile()
+
+                // Continue only if the File was successfully created
+                val photoURI = FileProvider.getUriForFile(this, "com.sampsonjoliver.firestarter.fileprovider", photoFile)
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                startActivityForResult(takePictureIntent, IntentUtils.REQUEST_IMAGE_CAPTURE)
+            } catch (ex: IOException) {
+                // Error occurred while creating the File
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun createImageFile(): File {
+        // Create an image file name
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val imageFileName = "JPEG_" + timeStamp + "_"
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val image = File.createTempFile(
+                imageFileName, /* prefix */
+                ".jpg", /* suffix */
+                storageDir      /* directory */)
+
+        // Save a file: path for use with ACTION_VIEW intents
+        currentPhotoPath = "file:" + image.absolutePath
+        return image
     }
 }

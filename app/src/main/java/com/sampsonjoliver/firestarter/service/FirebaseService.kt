@@ -21,6 +21,7 @@ object References {
     const val Users = "users"
     const val GeoSessions = "geosessions"
     const val NumUsers = "numUsers"
+    const val Images = "images"
 }
 
 object FirebaseService {

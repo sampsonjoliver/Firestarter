@@ -7,7 +7,8 @@ class Message(
         var userId: String,
         var userImageUrl: String,
         var sessionId: String,
-        var message: String
+        var message: String,
+        var contentUri: String? = null
 ) {
     var messageId: String = ""
     private var timestamp: Long = 0
