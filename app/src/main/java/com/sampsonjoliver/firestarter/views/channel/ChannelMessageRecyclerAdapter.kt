@@ -10,9 +10,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Message
+import com.sampsonjoliver.firestarter.utils.appear
 import com.sampsonjoliver.firestarter.utils.inflate
 import com.sampsonjoliver.firestarter.utils.setBackgroundResourcePreservePadding
 import kotlinx.android.synthetic.main.row_chat.view.*
+import kotlinx.android.synthetic.main.row_chat_message.view.*
 
 class ChannelMessageRecyclerAdapter(val currentUserId: String, val listener: ChatListener) : RecyclerView.Adapter<ChannelMessageRecyclerAdapter.ChatHolder>() {
     interface ChatListener {
@@ -114,8 +116,12 @@ class ChannelMessageRecyclerAdapter(val currentUserId: String, val listener: Cha
         }
 
         fun inflateMessageView(message: Message, isCurrentUser: Boolean, alignRight: Boolean, hasPrevious: Boolean, hasNext: Boolean, parent: ViewGroup, listener: ChatListener): View {
-            val messageView = parent.inflate(R.layout.row_chat_message, false) as TextView
-            messageView.text = message.message
+            val messageView = parent.inflate(R.layout.row_chat_message, false)
+            messageView.message.appear = message.message.isNullOrBlank().not()
+            messageView.message.text = message.message
+
+            messageView.messageContentImage.appear = message.contentThumbUri.isNullOrBlank().not()
+            messageView.messageContentImage.messageContentImage.setImageURI(message.contentThumbUri)
             messageView.setBackgroundResourcePreservePadding(
                     if (hasPrevious && hasNext && alignRight) R.drawable.chat_bubble_right
                     else if (hasPrevious && hasNext && !alignRight) R.drawable.chat_bubble_left

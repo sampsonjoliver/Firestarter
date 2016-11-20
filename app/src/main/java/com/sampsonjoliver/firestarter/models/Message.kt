@@ -8,7 +8,8 @@ class Message(
         var userImageUrl: String,
         var sessionId: String,
         var message: String,
-        var contentUri: String? = null
+        var contentUri: String? = null,
+        var contentThumbUri: String? = null
 ) {
     var messageId: String = ""
     private var timestamp: Long = 0

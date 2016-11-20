@@ -1,7 +1,9 @@
 package com.sampsonjoliver.firestarter.views.channel
 
+import android.app.Activity
 import android.content.Intent
 import android.location.Location
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
@@ -33,6 +35,11 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
+import android.R.attr.bitmap
+import android.app.ProgressDialog
+import android.graphics.Bitmap.CompressFormat
+import java.io.ByteArrayOutputStream
+
 
 class ChannelActivity : LocationAwareActivity(),
         ChannelMessageRecyclerAdapter.ChatListener,
@@ -226,8 +233,8 @@ class ChannelActivity : LocationAwareActivity(),
         }
     }
 
-    fun sendNewMessage(messageText: String, userId: String, contentUri: String? = null) {
-        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText, contentUri)
+    fun sendNewMessage(messageText: String, userId: String, contentUri: String? = null, contentThumbUri: String? = null) {
+        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText, contentUri, contentThumbUri)
 
         FirebaseService.getReference(References.Messages)
                 .child(sessionId)
@@ -288,16 +295,48 @@ class ChannelActivity : LocationAwareActivity(),
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
             IntentUtils.REQUEST_IMAGE_CAPTURE -> {
-                data?.data?.run {
-                    FirebaseStorage.getInstance().getReference("${References.Images}/${this.lastPathSegment}")
-                            .putFile(this, StorageMetadata.Builder()
-                                    .setContentType("image/jpg")
-                                    .setCustomMetadata("uid", SessionManager.getUid())
-                                    .setCustomMetadata("sessionId", sessionId)
-                                    .build()
-                            ).addOnSuccessListener { sendNewMessage("", SessionManager.getUid(), it.downloadUrl.toString()) }
-                            .addOnFailureListener {  }
-                            .addOnProgressListener {  } // todo
+                if (resultCode == Activity.RESULT_OK) {
+                    Uri.parse(currentPhotoPath)?.run {
+                        val progressDialog = ProgressDialog(this@ChannelActivity)
+                        progressDialog.setMessage(getString(R.string.uploading_image, 0f))
+                        progressDialog.show()
+
+                        FirebaseStorage.getInstance().getReference("${References.Images}/public/${this.lastPathSegment}")
+                                .putFile(this, StorageMetadata.Builder()
+                                        .setContentType("image/jpg")
+                                        .setCustomMetadata("uid", SessionManager.getUid())
+                                        .setCustomMetadata("sessionId", sessionId)
+                                        .build()
+                                ).addOnFailureListener {
+                                    Log.d(TAG, "Upload Failed: " + it.message)
+                                    progressDialog.dismiss()
+                                }.addOnProgressListener {
+                                    Log.d(TAG, "Upload Progress: ${it.bytesTransferred} / ${it.totalByteCount}")
+                                    progressDialog.setMessage(getString(R.string.uploading_image, (it.bytesTransferred.toFloat() / it.totalByteCount.toFloat()) * 100f))
+                                }.addOnSuccessListener { photoIt ->
+                                    val thumb = BitmapUtils.decodeSampledBitmap(currentPhotoPath!!, 100, 100)
+                                    val bos = ByteArrayOutputStream()
+                                    thumb.compress(CompressFormat.PNG, 100, bos)
+                                    val thumbData = bos.toByteArray()
+
+                                    FirebaseStorage.getInstance().getReference("${References.Images}/public/thumb_${this.lastPathSegment}")
+                                            .putBytes(thumbData, StorageMetadata.Builder()
+                                                    .setContentType("image/jpg")
+                                                    .setCustomMetadata("uid", SessionManager.getUid())
+                                                    .setCustomMetadata("sessionId", sessionId)
+                                                    .build()
+                                            ).addOnSuccessListener {
+                                                sendNewMessage("", SessionManager.getUid(), photoIt.downloadUrl.toString(), it.downloadUrl.toString())
+                                                progressDialog.dismiss()
+                                            }.addOnFailureListener {
+                                                Log.d(TAG, "Upload Thumbnail Failed: " + it.message)
+                                                progressDialog.dismiss()
+                                            }.addOnProgressListener {
+                                                Log.d(TAG, "Upload Thumbnail Progress: ${it.bytesTransferred} / ${it.totalByteCount}")
+                                                progressDialog.setMessage(getString(R.string.generating_thumbnail, (it.bytesTransferred.toFloat() / it.totalByteCount.toFloat()) * 100f))
+                                            }
+                                }
+                    }
                 }
             }
             else -> super.onActivityResult(requestCode, resultCode, data)
@@ -305,7 +344,7 @@ class ChannelActivity : LocationAwareActivity(),
     }
 
     fun dispatchTakePictureIntent() {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(packageManager) != null) {
             // Create the File where the photo should go

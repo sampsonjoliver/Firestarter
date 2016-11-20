@@ -49,4 +49,6 @@
   <string name="home_no_sessions">No sessions are happening near you</string>
   <string name="n_sessions_at_location">%1$d sessions at this location</string>
   <string name="shared_content">Shared Content</string>
+  <string name="uploading_image">Uploading Image: %1$f</string>
+  <string name="generating_thumbnail">Generating Thumbnail: %1$f</string>
 </resources>
