@@ -234,14 +234,9 @@ class ChannelActivity : LocationAwareActivity(),
     }
 
     fun sendNewMessage(messageText: String, userId: String, contentUri: String? = null, contentThumbUri: String? = null) {
-        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText, contentUri, contentThumbUri)
+        val message = Message(userId, SessionManager.getUserPhotoUrl(), sessionId ?: "", messageText, contentUri, contentThumbUri, session?.topic)
 
-        FirebaseService.getReference(References.Messages)
-                .child(sessionId)
-                .push()
-                .setValue(message, DatabaseReference.CompletionListener { databaseError, databaseReference ->
-                    Log.w(this@ChannelActivity.TAG, "onPushMessage: error=" + databaseError?.message)
-                })
+        FirebaseService.sendMessage(message)
     }
 
     fun attachDataListener(detach: Boolean = false) {

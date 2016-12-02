@@ -9,7 +9,8 @@ class Message(
         var sessionId: String,
         var message: String,
         var contentUri: String? = null,
-        var contentThumbUri: String? = null
+        var contentThumbUri: String? = null,
+        var title: String? = null
 ) {
     var messageId: String = ""
     private var timestamp: Long = 0

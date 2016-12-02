@@ -4,6 +4,7 @@ import android.support.annotation.StringDef
 import android.util.Log
 import com.firebase.geofire.*
 import com.google.firebase.database.*
+import com.sampsonjoliver.firestarter.models.Message
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.utils.TAG
 import java.util.concurrent.atomic.AtomicInteger
@@ -19,9 +20,11 @@ object References {
     const val SessionSubscriptions = "sessionSubscriptions"
     const val UserSubscriptions = "userSubscriptions"
     const val Users = "users"
+    const val UserInstanceIds = "instanceIds"
     const val GeoSessions = "geosessions"
     const val NumUsers = "numUsers"
     const val Images = "images"
+    const val Notifications = "notificationRequests"
 }
 
 object FirebaseService {
@@ -181,5 +184,21 @@ object FirebaseService {
                         return Transaction.success(mutableData)
                     }
                 })
+    }
+
+    fun sendMessage(message: Message) {
+        FirebaseService.getReference(References.Messages)
+                .child(message.sessionId)
+                .push()
+                .setValue(message, DatabaseReference.CompletionListener { databaseError, databaseReference ->
+                    Log.w(this.TAG, "onPushMessage: error=" + databaseError?.message)
+                    sendNotificationRequest(message)
+                })
+    }
+
+    fun sendNotificationRequest(message: Message) {
+        FirebaseService.getReference(References.Notifications)
+                .push()
+                .setValue(message)
     }
 }

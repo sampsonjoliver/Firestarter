@@ -36,6 +36,14 @@
           android:resource="@xml/file_paths"/>
     </provider>
 
+    <!-- FirebaseInstanceIdService performs security checks at runtime,
+      no need for explicit permissions despite exported="true"             -->
+    <service android:name=".service.FirestarterInstanceIdService" android:exported="true">
+      <intent-filter>
+        <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+      </intent-filter>
+    </service>
+
     <activity
         android:name=".LaunchActivity"
         android:label="@string/app_name"

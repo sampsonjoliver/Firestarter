@@ -211,7 +211,7 @@ class HomeActivity : LocationAwareActivity(),
 
     fun logout() {
         attachDataWatcher(detach = true)
-        FirebaseAuth.getInstance().signOut()
+        SessionManager.signout()
     }
 
     override fun onMapReady(googleMap: GoogleMap?) {
