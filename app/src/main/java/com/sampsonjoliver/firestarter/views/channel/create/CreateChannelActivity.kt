@@ -2,11 +2,17 @@ package com.sampsonjoliver.firestarter.views.channel.create
 
 import android.app.Activity
 import android.app.DatePickerDialog
+import android.app.ProgressDialog
 import android.app.TimePickerDialog
+import android.content.DialogInterface
 import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v7.app.AlertDialog
 import android.text.format.DateUtils
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -15,18 +21,22 @@ import android.widget.TextView
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.location.places.ui.PlacePicker
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import com.sampsonjoliver.firestarter.FirebaseActivity
 import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.models.Session
 import com.sampsonjoliver.firestarter.service.FirebaseService
+import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
-import com.sampsonjoliver.firestarter.utils.IntentUtils
-import com.sampsonjoliver.firestarter.utils.TAG
-import com.sampsonjoliver.firestarter.utils.inflate
+import com.sampsonjoliver.firestarter.utils.*
+import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchPickPhotoIntent
+import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchTakePictureIntent
 import com.sampsonjoliver.firestarter.views.dialogs.DatePickerDialogFragment
 import com.sampsonjoliver.firestarter.views.dialogs.FormDialog
 import com.sampsonjoliver.firestarter.views.dialogs.TimePickerDialogFragment
 import kotlinx.android.synthetic.main.activity_create_channel.*
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 class CreateChannelActivity : FirebaseActivity() {
@@ -35,6 +45,9 @@ class CreateChannelActivity : FirebaseActivity() {
     }
 
     val calendarHolder = Calendar.getInstance()
+
+    var currentPhotoPath: String? = null
+    var photoUploadPending: Boolean = false
 
     val session = Session().apply {
         startDate = Date().time
@@ -175,6 +188,18 @@ class CreateChannelActivity : FirebaseActivity() {
                 })
             }).show()
         }
+
+        banner.setOnClickListener {
+            AlertDialog.Builder(this@CreateChannelActivity).setItems(arrayOf("Take Photo", "Upload Photo"), DialogInterface.OnClickListener { var1, var2 ->
+                if (var2 == 0) {
+                    // Take photo
+                    currentPhotoPath = dispatchTakePictureIntent(this)
+                } else if (var2 == 1) {
+                    // Upload photo
+                    dispatchPickPhotoIntent(this)
+                }
+            }).show()
+        }
     }
 
     fun getTagView(tagName: String): View {
@@ -197,18 +222,41 @@ class CreateChannelActivity : FirebaseActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode === IntentUtils.REQUEST_PLACE_PICKER && resultCode === Activity.RESULT_OK) {
-            // The user has selected a place. Extract the name and address.
-            val place = PlacePicker.getPlace(this, data)
+        when (requestCode) {
+            IntentUtils.REQUEST_PLACE_PICKER -> {
+                resultCode.whenEqual(Activity.RESULT_OK) {
+                    // The user has selected a place. Extract the name and address.
+                    val place = PlacePicker.getPlace(this, data)
 
-            val name = place.name
-            val address = place.address
+                    val name = place.name
+                    val address = place.address
 
-            session.address = address.toString()
-            session.setLocation(place.latLng)
-            location.text = address
-        } else {
-            super.onActivityResult(requestCode, resultCode, data)
+                    session.address = address.toString()
+                    session.setLocation(place.latLng)
+                    location.text = address
+                }
+            }
+            IntentUtils.REQUEST_IMAGE_PICKER -> {
+                photoUploadPending = false
+                currentPhotoPath = null
+                resultCode.whenEqual(Activity.RESULT_OK) {
+                    data?.data?.run {
+                        photoUploadPending = true
+                        currentPhotoPath = this.toString()
+                    }
+                }
+                banner.setImageURI(currentPhotoPath ?: "")
+            }
+            IntentUtils.REQUEST_IMAGE_CAPTURE -> {
+                photoUploadPending = false
+                resultCode.whenEqual(Activity.RESULT_OK) {
+                    Uri.parse(currentPhotoPath)?.run {
+                        photoUploadPending = true
+                    }
+                }
+                banner.setImageURI(currentPhotoPath)
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
         }
     }
 
@@ -218,7 +266,45 @@ class CreateChannelActivity : FirebaseActivity() {
     }
 
     fun saveChannel() {
-        FirebaseService.createSession(session, { finish() }, { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() })
+        val progressDialog = ProgressDialog(this@CreateChannelActivity)
+        progressDialog.setMessage(getString(R.string.creating_channel))
+        progressDialog.show()
+
+        if (photoUploadPending) {
+            Uri.parse(currentPhotoPath)?.run {
+                progressDialog.setMessage(getString(R.string.uploading_image, 0f))
+
+                val thumb = BitmapUtils.decodeSampledBitmap(currentPhotoPath!!, 820, 312)
+                val bos = ByteArrayOutputStream()
+                thumb.compress(Bitmap.CompressFormat.PNG, 100, bos)
+                val thumbData = bos.toByteArray()
+
+                FirebaseStorage.getInstance().getReference("${References.Images}/banners/${this.lastPathSegment}")
+                        .putBytes(thumbData, StorageMetadata.Builder()
+                                .setContentType("image/jpg")
+                                .setCustomMetadata("uid", SessionManager.getUid())
+                                .build()
+                        ).addOnFailureListener {
+                            Log.d(TAG, "Upload Failed: " + it.message)
+                            progressDialog.dismiss()
+                        }.addOnProgressListener {
+                            Log.d(TAG, "Upload Progress: ${it.bytesTransferred} / ${it.totalByteCount}")
+                            progressDialog.setMessage(getString(R.string.uploading_image, (it.bytesTransferred.toFloat() / it.totalByteCount.toFloat()) * 100f))
+                        }.addOnSuccessListener { photoIt ->
+                            progressDialog.setMessage(getString(R.string.creating_channel))
+                            session.bannerUrl = photoIt.downloadUrl.toString()
+                            FirebaseService.createSession(session,
+                                    { finish() },
+                                    { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
+                            )
+                        }
+            }
+        } else {
+            FirebaseService.createSession(session,
+                    { finish() },
+                    { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
+            )
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {

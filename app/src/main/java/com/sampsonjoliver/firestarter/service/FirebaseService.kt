@@ -50,7 +50,7 @@ object FirebaseService {
         geoFire.getLocation(sessionId, listener)
     }
 
-    fun createSession(session: Session, onFinish: () -> Unit = {}, onError: () -> Unit = {}) {
+    fun createSession(session: Session, onFinish: (sessionId: String) -> Unit = {}, onError: () -> Unit = {}) {
         FirebaseService.getReference(References.Sessions)
                 .push()
                 .setValue(session, DatabaseReference.CompletionListener { databaseError, databaseReference ->
@@ -70,7 +70,7 @@ object FirebaseService {
                                         .setValue(true, DatabaseReference.CompletionListener { databaseError, databaseReference ->
                                             Log.w(this@FirebaseService.TAG, "SessionSubscription onPushMessage: error=" + databaseError?.message)
                                             if (databaseError == null) {
-                                                onFinish()
+                                                onFinish(databaseReference.key)
                                             } else {
                                                 onError()
                                             }

@@ -31,13 +31,9 @@ import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.*
 import kotlinx.android.synthetic.main.activity_channel.*
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.*
-import android.R.attr.bitmap
 import android.app.ProgressDialog
 import android.graphics.Bitmap.CompressFormat
+import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchTakePictureIntent
 import java.io.ByteArrayOutputStream
 
 
@@ -284,7 +280,7 @@ class ChannelActivity : LocationAwareActivity(),
     }
 
     fun addPhoto() {
-        dispatchTakePictureIntent()
+        currentPhotoPath = dispatchTakePictureIntent(this)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -296,7 +292,7 @@ class ChannelActivity : LocationAwareActivity(),
                         progressDialog.setMessage(getString(R.string.uploading_image, 0f))
                         progressDialog.show()
 
-                        FirebaseStorage.getInstance().getReference("${References.Images}/public/${this.lastPathSegment}")
+                        FirebaseStorage.getInstance().getReference("${References.Images}/$sessionId/${SessionManager.getUsername()}_${this.lastPathSegment}")
                                 .putFile(this, StorageMetadata.Builder()
                                         .setContentType("image/jpg")
                                         .setCustomMetadata("uid", SessionManager.getUid())
@@ -336,40 +332,5 @@ class ChannelActivity : LocationAwareActivity(),
             }
             else -> super.onActivityResult(requestCode, resultCode, data)
         }
-    }
-
-    fun dispatchTakePictureIntent() {
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(packageManager) != null) {
-            // Create the File where the photo should go
-            val photoFile: File
-            try {
-                photoFile = createImageFile()
-
-                // Continue only if the File was successfully created
-                val photoURI = FileProvider.getUriForFile(this, "com.sampsonjoliver.firestarter.fileprovider", photoFile)
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-                startActivityForResult(takePictureIntent, IntentUtils.REQUEST_IMAGE_CAPTURE)
-            } catch (ex: IOException) {
-                // Error occurred while creating the File
-            }
-        }
-    }
-
-    @Throws(IOException::class)
-    private fun createImageFile(): File {
-        // Create an image file name
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
-        val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val image = File.createTempFile(
-                imageFileName, /* prefix */
-                ".jpg", /* suffix */
-                storageDir      /* directory */)
-
-        // Save a file: path for use with ACTION_VIEW intents
-        currentPhotoPath = "file:" + image.absolutePath
-        return image
     }
 }
