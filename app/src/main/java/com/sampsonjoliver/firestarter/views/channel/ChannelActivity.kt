@@ -176,6 +176,7 @@ class ChannelActivity : LocationAwareActivity(),
                 sessionId?.let { FirebaseService.updateSessionSubscription(it, true, { finish() }) }
                 return true
             }
+            android.R.id.home -> return consume { finish() }
             else -> return super.onOptionsItemSelected(item)
         }
     }
@@ -187,6 +188,7 @@ class ChannelActivity : LocationAwareActivity(),
 
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
         toolbar.setOnClickListener { appBarLayout.setExpanded(true, true) }
         messageText.setOnClickListener { appBarLayout.setExpanded(false, true) }
         setUserSubscriptionState(false)
