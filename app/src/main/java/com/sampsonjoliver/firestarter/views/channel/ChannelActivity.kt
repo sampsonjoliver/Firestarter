@@ -34,7 +34,12 @@ import kotlinx.android.synthetic.main.activity_channel.*
 import android.app.ProgressDialog
 import android.graphics.Bitmap.CompressFormat
 import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchTakePictureIntent
+import com.sampsonjoliver.firestarter.views.gallery.GalleryActivity
+import com.sampsonjoliver.firestarter.views.gallery.GalleryActivity.Companion.EXTRA_MESSAGES
+import com.sampsonjoliver.firestarter.views.gallery.GalleryActivity.Companion.EXTRA_TITLE
+import com.sampsonjoliver.firestarter.views.gallery.GalleryItemFragment
 import java.io.ByteArrayOutputStream
+import java.util.*
 
 
 class ChannelActivity : LocationAwareActivity(),
@@ -127,6 +132,14 @@ class ChannelActivity : LocationAwareActivity(),
         this.copyToClipboard(message.messageId, message.message)
     }
 
+    override fun onMessageClick(message: Message) {
+        message.contentUri.isNullOrEmpty().not().whenEqual(true) {
+            val photos = adapter.messages.flatMap { it.messages }.filter { it.contentUri.isNullOrEmpty().not() }.sortedBy { it.getTimestampLong() }
+            val position = photos.indexOfFirst { message.contentUri == it.contentUri }
+            GalleryItemFragment.newInstance(ArrayList(photos), position).show(fragmentManager, "")
+        }
+    }
+
     override fun onChildMoved(p0: DataSnapshot?, previousChildName: String?) = Unit
     override fun onChildChanged(p0: DataSnapshot?, previousChildName: String?) {
         Log.w(this.TAG, "onChildChanged: ${p0?.key}")
@@ -176,7 +189,13 @@ class ChannelActivity : LocationAwareActivity(),
                 sessionId?.let { FirebaseService.updateSessionSubscription(it, true, { finish() }) }
                 return true
             }
-            android.R.id.home -> return consume { finish() }
+            R.id.menu_content -> { return consume {
+                startActivity(Intent(this@ChannelActivity, GalleryActivity::class.java).apply {
+                    val x = adapter.messages.flatMap { it.messages }.filter { it.contentUri.isNullOrEmpty().not() }.sortedBy { it.getTimestampLong() }
+                    putParcelableArrayListExtra(EXTRA_MESSAGES, ArrayList(x))
+                    putExtra(EXTRA_TITLE, session?.topic)
+                })
+            }}
             else -> return super.onOptionsItemSelected(item)
         }
     }

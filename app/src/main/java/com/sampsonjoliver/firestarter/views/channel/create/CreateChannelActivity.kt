@@ -315,7 +315,6 @@ class CreateChannelActivity : FirebaseActivity() {
                 }
                 return true
             }
-            android.R.id.home -> return consume { finish() }
             else -> return super.onOptionsItemSelected(item)
         }
     }

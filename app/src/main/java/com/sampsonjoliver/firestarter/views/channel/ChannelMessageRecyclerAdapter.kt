@@ -20,6 +20,7 @@ class ChannelMessageRecyclerAdapter(val currentUserId: String, val listener: Cha
     interface ChatListener {
         fun onItemInsertedListener()
         fun onMessageLongPress(message: Message)
+        fun onMessageClick(message: Message)
     }
 
     companion object {
@@ -137,6 +138,10 @@ class ChannelMessageRecyclerAdapter(val currentUserId: String, val listener: Cha
             messageView.setOnLongClickListener {
                 listener.onMessageLongPress(message)
                 true
+            }
+
+            messageView.setOnClickListener {
+                listener.onMessageClick(message)
             }
 
             return messageView
