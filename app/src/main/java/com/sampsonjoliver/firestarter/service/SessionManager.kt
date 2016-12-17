@@ -3,12 +3,10 @@ package com.sampsonjoliver.firestarter.service
 import android.content.Context
 import android.preference.PreferenceManager
 import android.util.Log
+import com.facebook.login.LoginManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserInfo
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ServerValue
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessaging
 import com.sampsonjoliver.firestarter.utils.TAG
@@ -125,12 +123,15 @@ object SessionManager {
 
     fun signout() {
         FirebaseInstanceId.getInstance().token?.run {
-            Log.d(TAG, "Registered Instance ID to user ${SessionManager.getUid()}")
+            Log.d(TAG, "Deregistered Instance ID to user ${SessionManager.getUid()}")
             FirebaseService.getReference(References.Users)
                     .child(SessionManager.getUid())
                     .child(References.UserInstanceIds)
                     .child(this)
-                    .setValue(true, { FirebaseAuth.getInstance().signOut() })
+                    .setValue(false, DatabaseReference.CompletionListener { err, ref ->
+                        FirebaseAuth.getInstance().signOut()
+                        LoginManager.getInstance().logOut()
+                    })
         }
     }
 }
