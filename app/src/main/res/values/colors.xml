@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="colorPrimary">#3F51B5</color>
-  <color name="colorPrimaryDark">#303F9F</color>
-  <color name="colorAccent">#FF4081</color>
+  <color name="colorPrimary">#ff5722</color>
+  <color name="colorPrimaryDark">#e64a19</color>
+  <color name="colorAccent">#ff9107</color>
+  <color name="colorPrimaryLight">#ffccbc</color>
+  <color name="colorPrimaryText">#212121</color>
+  <color name="colorSecondaryText">#757575</color>
+  <color name="colorDivider">#bdbdbd</color>
 
   <color name="transparent_white">#00FFFFFF</color>
   <color name="transparent_black">#00000000</color>
@@ -21,4 +25,13 @@
   <color name="malachite">#02DE57</color>
   <color name="green_haze">#02AE37</color>
   <color name="red">#ff0000</color>
+
+  <color name="cinnabar">#e64a19</color>
+  <color name="orange">#ff5722</color>
+  <color name="amber">#ffc107</color>
+  <color name="romantic">#ffccbc</color>
+  <color name="mineshaft_deep">#212121</color>
+  <color name="boulder">#757575</color>
+  <color name="silver_deep">#bdbdbd</color>
+
 </resources>

@@ -27,6 +27,7 @@
   <dimen name="textSizeXLarge">20sp</dimen>
   <dimen name="textSizeXxLarge">24sp</dimen>
   <dimen name="textSizeXxxLarge">28sp</dimen>
+  <dimen name="textSizeHuge">42sp</dimen>
 
   <dimen name="fontIconSmall">16sp</dimen>
   <dimen name="fontIconMedium">24sp</dimen>

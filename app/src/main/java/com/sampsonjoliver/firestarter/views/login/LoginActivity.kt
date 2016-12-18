@@ -23,6 +23,7 @@ import com.sampsonjoliver.firestarter.R
 import com.sampsonjoliver.firestarter.utils.IntentUtils
 import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.utils.appear
+import com.sampsonjoliver.firestarter.utils.visible
 import kotlinx.android.synthetic.main.activity_login.*
 
 /**
@@ -135,14 +136,14 @@ class LoginActivity : FirebaseActivity() {
     }
 
     fun onGoogleAccountSignin(account: GoogleSignInAccount) {
-        login_progress.appear = true
+        login_progress.visible = true
 
         Log.d(TAG, "firebaseAuthWithGoogle: ${account.id}");
         signinWithFirebase(GoogleAuthProvider.getCredential(account.idToken, null))
     }
 
     fun onFacebookAccountSignin(token: AccessToken) {
-        login_progress.appear = true
+        login_progress.visible = true
 
         Log.d(TAG, "handleFacebookAccessToken: $token")
         signinWithFirebase(FacebookAuthProvider.getCredential(token.token))
@@ -160,6 +161,6 @@ class LoginActivity : FirebaseActivity() {
 
         Snackbar.make(facebookLogin, "Authentication failed.", Snackbar.LENGTH_SHORT).show()
 
-        login_progress.appear = false
+        login_progress.visible = false
     }
 }

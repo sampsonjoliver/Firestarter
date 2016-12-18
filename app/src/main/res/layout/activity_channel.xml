@@ -157,7 +157,7 @@
       android:layout_height="wrap_content"
       android:padding="@dimen/spacingMedium"
       app:layout_behavior="@string/appbar_scrolling_view_behavior"
-      android:background="#ddee8808"
+      android:background="@color/colorAccent"
       android:gravity="center_vertical"
       >
 

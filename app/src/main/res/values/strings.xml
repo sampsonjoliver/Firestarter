@@ -52,4 +52,5 @@
   <string name="uploading_image">Uploading Image: %1$f</string>
   <string name="generating_thumbnail">Generating Thumbnail: %1$f</string>
   <string name="creating_channel">Making Channel</string>
+  <string name="firestarter">Firestarter</string>
 </resources>
