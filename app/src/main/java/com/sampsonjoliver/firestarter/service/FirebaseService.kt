@@ -25,6 +25,7 @@ object References {
     const val NumUsers = "numUsers"
     const val Images = "images"
     const val Notifications = "notificationRequests"
+    const val tags = "tags"
 }
 
 object FirebaseService {

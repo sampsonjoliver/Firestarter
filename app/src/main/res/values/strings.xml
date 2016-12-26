@@ -53,4 +53,7 @@
   <string name="generating_thumbnail">Generating Thumbnail: %1$f</string>
   <string name="creating_channel">Making Channel</string>
   <string name="firestarter">Firestarter</string>
+  <string name="loading">Loading…</string>
+  <string name="take_photo">Take Photo</string>
+  <string name="upload_photo">Upload Photo</string>
 </resources>

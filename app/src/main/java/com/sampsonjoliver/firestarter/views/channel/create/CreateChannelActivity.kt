@@ -21,6 +21,9 @@ import android.widget.TextView
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException
 import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.location.places.ui.PlacePicker
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.sampsonjoliver.firestarter.FirebaseActivity
@@ -57,6 +60,8 @@ class CreateChannelActivity : FirebaseActivity() {
 
     var startDateSet = false
     var endDateSet = false
+
+    val progressDialog by lazy { ProgressDialog(this) }
 
     fun setStartTime(timeInMillis: Long) {
         val currentDuration = session.durationMs
@@ -175,50 +180,44 @@ class CreateChannelActivity : FirebaseActivity() {
         }
 
         addTag.setOnClickListener {
-            FormDialog(this).addInputText(getString(R.string.create_session_tag_hint), BUNDLE_TAG_TAG, EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS, {
-                if (it is String && it.isNullOrBlank().not())
-                    null
-                else
-                    getString(R.string.session_tag_error)
-            }).build(getString(R.string.create_session_tag_title), getString(R.string.cancel), getString(R.string.add), { bundle ->
-                val tagName = bundle.getString(BUNDLE_TAG_TAG)
-                session.tags.getOrPut(tagName, {
-                    tagContainer.addView(getTagView(tagName))
-                    true
-                })
-            }).show()
+            progressDialog.setMessage(getString(R.string.loading))
+            progressDialog.show()
+            FirebaseService.getReference(References.tags).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError?) {
+                    progressDialog.dismiss()
+                }
+
+                override fun onDataChange(p0: DataSnapshot?) {
+                    progressDialog.dismiss()
+                    val tags = p0?.children?.map { it.key }?.toTypedArray()
+                    val selectedTags = tags?.map { Pair(it, session.tags[it] ?: false) }.orEmpty().toMap(mutableMapOf())
+                    val checkedIndexes = selectedTags.values.toBooleanArray()
+                    AlertDialog.Builder(this@CreateChannelActivity)
+                            .setMultiChoiceItems(tags, checkedIndexes, { dialogInterface, i, b ->
+                                selectedTags.set(tags?.get(i).orEmpty(), b)
+                            })
+                            .setPositiveButton(getString(R.string.save), { dialogInterface, i ->
+                                session.tags = selectedTags
+                                tagList.text = session.tags.entries.filter { it.value == true }.map { it.key }.joinToString()
+                            })
+                            .setNegativeButton(getString(R.string.cancel), null)
+                            .show()
+                }
+            })
         }
 
         banner.setOnClickListener {
-            AlertDialog.Builder(this@CreateChannelActivity).setItems(arrayOf("Take Photo", "Upload Photo"), DialogInterface.OnClickListener { var1, var2 ->
-                if (var2 == 0) {
+            AlertDialog.Builder(this@CreateChannelActivity)
+                    .setItems(arrayOf(getString(R.string.take_photo), getString(R.string.upload_photo)), { dialogInterface, index ->
+                if (index == 0) {
                     // Take photo
                     currentPhotoPath = dispatchTakePictureIntent(this)
-                } else if (var2 == 1) {
+                } else if (index == 1) {
                     // Upload photo
                     dispatchPickPhotoIntent(this)
                 }
             }).show()
         }
-    }
-
-    fun getTagView(tagName: String): View {
-            val view = tagContainer.inflate(R.layout.item_session_tag_chip, false)
-            view.setOnClickListener {
-                FormDialog(this).addInputText(getString(R.string.create_session_tag_hint), BUNDLE_TAG_TAG, tagName, EditorInfo.TYPE_TEXT_FLAG_CAP_WORDS, {
-                    if (it is String && it.isNullOrBlank().not())
-                        null
-                    else
-                        getString(R.string.session_tag_error)
-                }).build(getString(R.string.edit_session_tag_title), getString(R.string.cancel), getString(R.string.add),
-                        { (view as? TextView)?.text = it.getString(BUNDLE_TAG_TAG) },
-                        { dialogInterface, int ->
-                            tagContainer.removeView(view)
-                            session.tags.remove(tagName)
-                        }
-                ).show()
-            }
-        return view
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

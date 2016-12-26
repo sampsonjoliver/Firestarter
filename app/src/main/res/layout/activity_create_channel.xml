@@ -227,11 +227,15 @@
             android:text="@string/ic_add"
             />
 
-        <org.apmem.tools.layouts.FlowLayout
-            android:id="@+id/tagContainer"
-            android:layout_width="match_parent"
+        <TextView
+            android:id="@+id/tagList"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/addTag"/>
+            android:layout_below="@id/tagTitle"
+            android:layout_toRightOf="@id/tagIcon"
+            android:padding="@dimen/spacingMedium"
+            android:gravity="center_vertical"
+            tools:text="Tag1, Tag2, Tag3, ..."/>
 
       </RelativeLayout>
     </LinearLayout>
