@@ -1,14 +1,12 @@
 package com.sampsonjoliver.firestarter.views.main
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.location.Location
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
-import android.support.design.widget.NavigationView
 import android.support.design.widget.Snackbar
-import android.support.v4.view.GravityCompat
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SimpleItemAnimator
@@ -27,7 +25,6 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -42,11 +39,9 @@ import com.sampsonjoliver.firestarter.utils.*
 import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
 import com.sampsonjoliver.firestarter.views.channel.create.CreateChannelActivity
 import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.app_bar_main.*
 import kotlinx.android.synthetic.main.content_main_peekbar.*
 
 class HomeActivity : LocationAwareActivity(),
-        NavigationView.OnNavigationItemSelectedListener,
         OnMapReadyCallback,
         GoogleMap.OnCameraChangeListener,
         GeoQueryEventListener {
@@ -55,6 +50,9 @@ class HomeActivity : LocationAwareActivity(),
         const val LOCATION_KEY = "LOCATION_KEY"
         const val MAP_LOCATION_RADIUS_KM = 0.6
     }
+
+    val progressDialog by lazy { ProgressDialog(this) }
+    var searchFilters = mutableMapOf<String, Boolean>()
 
     val sessionSubscriptionListener = object : ChildEventListener {
         override fun onChildMoved(dataSnapshot: DataSnapshot?, previousChildName: String?) {
@@ -333,17 +331,9 @@ class HomeActivity : LocationAwareActivity(),
             startActivity(Intent(this, CreateChannelActivity::class.java))
         }
 
-        val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close)
-        drawerLayout?.addDrawerListener(toggle)
-        toggle.syncState()
-
-        val navigationView = findViewById(R.id.nav_view) as NavigationView?
-        navigationView?.setNavigationItemSelectedListener(this)
-
         recycler.adapter = adapter
         recycler.layoutManager = LinearLayoutManager(this)
         (recycler.itemAnimator as? SimpleItemAnimator)?.supportsChangeAnimations = false
-
     }
 
     private fun updateValuesFromBundle(savedInstanceState: Bundle?) {
@@ -390,15 +380,6 @@ class HomeActivity : LocationAwareActivity(),
         }
     }
 
-    override fun onBackPressed() {
-        val drawer = findViewById(R.id.drawerLayout) as DrawerLayout?
-        if (drawer!!.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
@@ -406,28 +387,41 @@ class HomeActivity : LocationAwareActivity(),
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        val id = item?.itemId
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true
+        when (item?.itemId) {
+            R.id.action_settings -> return true
+            R.id.action_logout -> return consume { logout() }
+            R.id.action_search -> return consume { showFiltersDialog() }
+            else -> return super.onOptionsItemSelected(item)
         }
-
-        return super.onOptionsItemSelected(item)
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        // Handle navigation view item clicks here.
-        when (item.itemId) {
-            R.id.nav_logout -> logout()
-        }
+    fun showFiltersDialog() {
+        progressDialog.setMessage(getString(R.string.loading))
+        progressDialog.show()
+        FirebaseService.getReference(References.tags).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError?) {
+                progressDialog.dismiss()
+            }
 
-        val drawer = findViewById(R.id.drawerLayout) as DrawerLayout?
-        drawer?.closeDrawer(GravityCompat.START)
-        return true
+            override fun onDataChange(p0: DataSnapshot?) {
+                progressDialog.dismiss()
+                val tags = p0?.children?.map { it.key }?.toTypedArray()
+                val selectedTags = tags?.map { Pair(it, searchFilters[it] ?: false) }.orEmpty().toMap(mutableMapOf())
+                val checkedIndexes = selectedTags.values.toBooleanArray()
+                AlertDialog.Builder(this@HomeActivity)
+                        .setMultiChoiceItems(tags, checkedIndexes, { dialogInterface, i, b ->
+                            selectedTags[tags?.get(i).orEmpty()] = b
+                        })
+                        .setPositiveButton(getString(R.string.save), { dialogInterface, i ->
+                            searchFilters = selectedTags
+                        })
+                        .setNegativeButton(getString(R.string.clear), { dialogInterface, i ->
+                            searchFilters.clear()
+                        })
+                        .show()
+            }
+
+            // todo actually implement the part that filters the shown results
+        })
     }
 }
