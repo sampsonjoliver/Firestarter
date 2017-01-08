@@ -35,11 +35,26 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
         fun onSessionClicked(session: Session)
     }
 
-    val subscribedSessions: MutableList<Session> = mutableListOf()
-    val nearbySessions: MutableList<Session> = mutableListOf()
+    var filter: List<String> = emptyList()
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+    val _subscribedSessions: MutableList<Session> = mutableListOf()
+    val _nearbySessions: MutableList<Session> = mutableListOf()
 
-    fun hasSubscriptions() = subscribedSessions.size > 0
-    fun hasNearbySessions() = nearbySessions.size > 0
+    val subscribedSessions: List<Session>
+        get() {
+            return _subscribedSessions.filter { filter.isEmpty() || it.tags.any { it.value && filter.contains(it.key) } }
+        }
+
+    val nearbySessions: List<Session>
+        get() {
+            return _nearbySessions.filter { filter.isEmpty() || it.tags.any { it.value && filter.contains(it.key) } }
+        }
+
+    fun hasSubscriptions() = subscribedSessions.isNotEmpty()
+    fun hasNearbySessions() = nearbySessions.isNotEmpty()
 
     fun nearbySessionIndexToAdapterIndex(dataIndex: Int): Int {
         return (if (hasSubscriptions()) 1 + subscribedSessions.size else 0) + 1 + dataIndex
@@ -98,8 +113,8 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
             holder.bind(holder.itemView.context.resources.getString(R.string.home_no_sessions))
     }
 
-    override fun getItemCount(): Int = (subscribedSessions.size + if (subscribedSessions.size > 0) 1 else 0) +
-            (nearbySessions.size + if (nearbySessions.size > 0) 1 else 0)
+    override fun getItemCount(): Int = (subscribedSessions.size + if (subscribedSessions.isNotEmpty()) 1 else 0) +
+            (nearbySessions.size + if (nearbySessions.isNotEmpty()) 1 else 0)
 
     override fun onCreateViewHolder(parent: ViewGroup?, viewType: Int): RecyclerView.ViewHolder? {
         return when (viewType) {

@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -36,6 +37,8 @@ import com.sampsonjoliver.firestarter.service.FirebaseService
 import com.sampsonjoliver.firestarter.service.References
 import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.*
+import com.sampsonjoliver.firestarter.utils.analytics.Events
+import com.sampsonjoliver.firestarter.utils.analytics.Params
 import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
 import com.sampsonjoliver.firestarter.views.channel.create.CreateChannelActivity
 import kotlinx.android.synthetic.main.activity_home.*
@@ -43,8 +46,7 @@ import kotlinx.android.synthetic.main.content_main_peekbar.*
 
 class HomeActivity : LocationAwareActivity(),
         OnMapReadyCallback,
-        GoogleMap.OnCameraChangeListener,
-        GeoQueryEventListener {
+        GoogleMap.OnCameraChangeListener {
 
     companion object {
         const val LOCATION_KEY = "LOCATION_KEY"
@@ -54,6 +56,7 @@ class HomeActivity : LocationAwareActivity(),
     val progressDialog by lazy { ProgressDialog(this) }
     var searchFilters = mutableMapOf<String, Boolean>()
 
+    // Listener attached to user's subscriptions, gets the id of each session
     val sessionSubscriptionListener = object : ChildEventListener {
         override fun onChildMoved(dataSnapshot: DataSnapshot?, previousChildName: String?) {
             Log.w(this.TAG, "onChildMoved: ${dataSnapshot?.key}")
@@ -81,14 +84,13 @@ class HomeActivity : LocationAwareActivity(),
                         .child(key)
                         .removeEventListener(subscribedSessionListener)
 
+                val hasSubscriptions = adapter.hasSubscriptions()
                 adapter.subscribedSessions.indexOfFirst { it.sessionId == key }.whenNotEqual(-1) {
-                    it.let {
-                        adapter.notifyItemRemoved(adapter.subscribedSessionIndexToAdapterIndex(it))
-                        adapter.subscribedSessions.removeAt(it)
-                        if (adapter.subscribedSessions.size == 0)
-                            adapter.notifyItemChanged(adapter.getSubscribedHeaderIndex())
-                    }
+                    adapter.notifyItemRemoved(adapter.subscribedSessionIndexToAdapterIndex(it))
+                    if (hasSubscriptions && adapter.subscribedSessions.isEmpty())
+                        adapter.notifyItemRemoved(adapter.getSubscribedHeaderIndex())
                 }
+                adapter._subscribedSessions.removeAll { it.sessionId == key }
             }
         }
 
@@ -98,6 +100,7 @@ class HomeActivity : LocationAwareActivity(),
         }
     }
 
+    // Listener fetches details of the session
     val subscribedSessionListener = object : ValueEventListener {
         override fun onCancelled(dataSnapshot: DatabaseError?) {
             Log.w(this@HomeActivity.TAG, "onCancelled")
@@ -108,22 +111,72 @@ class HomeActivity : LocationAwareActivity(),
 
             dataSnapshot?.getValue(Session::class.java)?.let { session ->
                 session.sessionId = dataSnapshot.key
-                var index = adapter.subscribedSessions.indexOfFirst { it.sessionId == session.sessionId }
 
+                val isSubscribedEmpty = adapter.hasSubscriptions().not()
+                val index = adapter._subscribedSessions.indexOfFirst { it.sessionId == session.sessionId }
                 if (index == -1) {
-                    index = adapter.subscribedSessions.insertSorted(session) { it.topic }
-                    if (adapter.subscribedSessions.size == 1) {
+                    adapter._subscribedSessions.insertSorted(session) { it.topic }
+                    if (isSubscribedEmpty && adapter.subscribedSessions.size == 1) {
                         adapter.notifyItemInserted(adapter.getSubscribedHeaderIndex())
                     }
-                    adapter.notifyItemInserted(adapter.subscribedSessionIndexToAdapterIndex(index))
+
+                    val filteredIndex = adapter.subscribedSessions.indexOfFirst { it.sessionId == session.sessionId }
+                    filteredIndex.whenNotEqual(-1) { adapter.notifyItemInserted(adapter.subscribedSessionIndexToAdapterIndex(filteredIndex)) }
                 } else {
-                    adapter.subscribedSessions.set(index, session)
-                    adapter.notifyItemChanged(adapter.subscribedSessionIndexToAdapterIndex(index))
+                    adapter._subscribedSessions[index] = session
+
+                    val filteredIndex = adapter.subscribedSessions.indexOfFirst { it.sessionId == session.sessionId }
+                    filteredIndex.whenNotEqual(-1) { adapter.notifyItemChanged(adapter.subscribedSessionIndexToAdapterIndex(filteredIndex)) }
                 }
             }
         }
     }
 
+    // Listens for nearby session keys
+    var geoQueryListener = object : GeoQueryEventListener {
+        override fun onGeoQueryReady() = Unit
+
+        override fun onKeyEntered(key: String?, location: GeoLocation?) {
+            googleMap?.run {
+                if (key != null && (adapter.subscribedSessions.any { it.sessionId == key } || adapter.nearbySessions.any { it.sessionId == key })) {
+                    addMapMarker(key, location.latLng())
+
+                    FirebaseService.getReference(References.Sessions)
+                            .child(key)
+                            .addValueEventListener(nearbySessionListener)
+                }
+            }
+        }
+
+        override fun onKeyMoved(key: String?, location: GeoLocation?) {
+            mapMarkers[key]?.animateMarkerTo(location?.latitude ?: 0.0, location?.longitude ?: 0.0)
+        }
+
+        override fun onKeyExited(key: String?) {
+            val hasNearbySessions = adapter.hasNearbySessions()
+            adapter.nearbySessions.indexOfFirst { it.sessionId == key }.whenNotEqual(-1) {
+                adapter.notifyItemRemoved(adapter.nearbySessionIndexToAdapterIndex(it))
+            }
+            adapter._nearbySessions.removeAll { it.sessionId == key }
+
+            if (hasNearbySessions && adapter.nearbySessions.isEmpty())
+                adapter.notifyItemRemoved(adapter.getNearbyHeaderIndex())
+
+            FirebaseService.getReference(References.Sessions)
+                    .child(key)
+                    .removeEventListener(nearbySessionListener)
+        }
+
+        override fun onGeoQueryError(error: DatabaseError?) {
+            Snackbar.make(recycler, "There was an error querying Geofire: " + error?.message, Snackbar.LENGTH_LONG).show()
+            FirebaseAnalytics.getInstance(this@HomeActivity).logEvent(Events.GEO_QUERY_ERROR, Bundle().apply {
+                putString(Params.STATUS, error?.code?.toString() ?: "")
+                putString(Params.MESSAGE, error?.message)
+            })
+        }
+    }
+
+    // Get the details of nearby sessions
     val nearbySessionListener = object : ValueEventListener {
         override fun onCancelled(dataSnapshot: DatabaseError?) {
             Log.w(this@HomeActivity.TAG, "onCancelled")
@@ -134,14 +187,25 @@ class HomeActivity : LocationAwareActivity(),
 
             dataSnapshot?.getValue(Session::class.java)?.let { session ->
                 session.sessionId = dataSnapshot.key
-                var index = adapter.nearbySessions.indexOfFirst { it.sessionId == session.sessionId }
 
+                val index = adapter._nearbySessions.indexOfFirst { it.sessionId == session.sessionId }
                 if (index == -1) {
-                    index = adapter.nearbySessions.insertSorted(session) { it.topic }
-                    adapter.notifyItemInserted(adapter.nearbySessionIndexToAdapterIndex(index))
+                    val isNearbyEmpty = adapter.hasNearbySessions().not()
+                    adapter._nearbySessions.insertSorted(session) { it.topic }
+                    if (isNearbyEmpty && adapter.nearbySessions.size == 1) {
+                        adapter.notifyItemInserted(adapter.getNearbyHeaderIndex())
+                    }
+
+                    val filteredIndex = adapter.nearbySessions.indexOfFirst { it.sessionId == session.sessionId }
+                    filteredIndex.whenNotEqual(-1) { adapter.notifyItemInserted(adapter.nearbySessionIndexToAdapterIndex(filteredIndex)) }
+
+                    Log.d(TAG, "Inserted nearby session at index=$index, and filteredIndex=$filteredIndex")
                 } else {
-                    adapter.nearbySessions.set(index, session)
-                    adapter.notifyItemChanged(adapter.nearbySessionIndexToAdapterIndex(index))
+                    adapter._nearbySessions[index] = session
+
+                    val filteredIndex = adapter.nearbySessions.indexOfFirst { it.sessionId == session.sessionId }
+                    filteredIndex.whenNotEqual(-1) { adapter.notifyItemChanged(adapter.nearbySessionIndexToAdapterIndex(filteredIndex)) }
+                    Log.d(TAG, "Updated nearby session at index=$index, and filteredIndex=$filteredIndex")
                 }
             }
         }
@@ -157,44 +221,14 @@ class HomeActivity : LocationAwareActivity(),
 
     val behavior: BottomSheetBehavior<RecyclerView>
         get() = BottomSheetBehavior.from(recycler)
-
     var googleMap: GoogleMap? = null
     var mapMarkers: MutableMap<String, Marker> = mutableMapOf()
     var geoQuery: GeoQuery? = null
     val googleMapFragment: MapFragment
             get() = fragmentManager.findFragmentById(R.id.mapFragment) as MapFragment
     var isGeoQueryAttached = false
+
     var mapManuallyPanned = false
-
-    override fun onGeoQueryReady() = Unit
-
-    override fun onKeyEntered(key: String?, location: GeoLocation?) {
-        googleMap?.run {
-            if (key != null) {
-                addMapMarker(key, location.latLng())
-
-                FirebaseService.getReference(References.Sessions)
-                        .child(key)
-                        .addValueEventListener(nearbySessionListener)
-            }
-        }
-    }
-
-    override fun onKeyMoved(key: String?, location: GeoLocation?) {
-        mapMarkers[key]?.animateMarkerTo(location?.latitude ?: 0.0, location?.longitude ?: 0.0)
-    }
-
-    override fun onKeyExited(key: String?) {
-        mapMarkers.remove(key)?.remove()
-
-        FirebaseService.getReference(References.Sessions)
-                .child(key)
-                .removeEventListener(nearbySessionListener)
-    }
-
-    override fun onGeoQueryError(error: DatabaseError?) {
-        Snackbar.make(recycler, "There was an error querying Geofire: " + error?.message, Snackbar.LENGTH_LONG).show()
-    }
 
     override fun onConnected(connectionHint: Bundle?) {
         super.onConnected(connectionHint)
@@ -236,9 +270,10 @@ class HomeActivity : LocationAwareActivity(),
             consume { bindOverlayData(sessionsAtMarker, adapter.location) }
         }
 
-        // todo add all markers already loaded
         if (adapter.location != null)
             tryCenterMapOnUser()
+
+        refreshMapMarkers()
     }
 
     fun bindOverlayData(sessions: List<Session>, userLocation: Location?) {
@@ -368,14 +403,14 @@ class HomeActivity : LocationAwareActivity(),
             }
 
             if (isGeoQueryAttached) {
-                geoQuery?.removeGeoQueryEventListener(this)
+                geoQuery?.removeGeoQueryEventListener(geoQueryListener)
                 isGeoQueryAttached = false
             }
         } else {
             sessionQuery.addChildEventListener(sessionSubscriptionListener)
             userSubscriptionQuery.addChildEventListener(sessionSubscriptionListener)
 
-            geoQuery = FirebaseService.geoQueryForSessions(this, adapter.location?.latitude ?: 0.0, adapter.location?.longitude ?: 0.0, MAP_LOCATION_RADIUS_KM)
+            geoQuery = FirebaseService.geoQueryForSessions(geoQueryListener, adapter.location?.latitude ?: 0.0, adapter.location?.longitude ?: 0.0, MAP_LOCATION_RADIUS_KM)
             isGeoQueryAttached = true
         }
     }
@@ -414,14 +449,26 @@ class HomeActivity : LocationAwareActivity(),
                         })
                         .setPositiveButton(getString(R.string.save), { dialogInterface, i ->
                             searchFilters = selectedTags
+                            adapter.filter = searchFilters.filter { it.value }.map { it.key }
+                            refreshMapMarkers()
                         })
                         .setNegativeButton(getString(R.string.clear), { dialogInterface, i ->
                             searchFilters.clear()
+                            adapter.filter = emptyList()
+                            refreshMapMarkers()
                         })
                         .show()
             }
-
-            // todo actually implement the part that filters the shown results
         })
+    }
+
+    fun refreshMapMarkers() {
+        googleMap?.let { map ->
+            map.clear()
+            mapMarkers.forEach { marker ->
+                if (adapter.subscribedSessions.any { it.sessionId == marker.key } || adapter.nearbySessions.any { it.sessionId == marker.key })
+                    addMapMarker(marker.key, marker.value.position)
+            }
+        }
     }
 }
