@@ -33,6 +33,7 @@ import com.sampsonjoliver.firestarter.utils.*
 import kotlinx.android.synthetic.main.activity_channel.*
 import android.app.ProgressDialog
 import android.graphics.Bitmap.CompressFormat
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchTakePictureIntent
 import com.sampsonjoliver.firestarter.views.gallery.GalleryActivity
 import com.sampsonjoliver.firestarter.views.gallery.GalleryActivity.Companion.EXTRA_MESSAGES
@@ -227,7 +228,9 @@ class ChannelActivity : LocationAwareActivity(),
         attachDataListener()
 
         sendButton.setOnClickListener { sendNewMessage(messageText) }
-        photoButton.setOnClickListener {  }
+        photoButton.setOnClickListener { addPhoto() }
+
+        photoButton.appear = FirebaseRemoteConfig.getInstance().getBoolean("photo_messages_enabled")
 
         messageText.setOnEditorActionListener(TextView.OnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEND) {
@@ -236,10 +239,6 @@ class ChannelActivity : LocationAwareActivity(),
             }
             false
         })
-
-        photoButton.setOnClickListener {
-            addPhoto()
-        }
     }
 
     fun sendNewMessage(messageWidget: EditText) {

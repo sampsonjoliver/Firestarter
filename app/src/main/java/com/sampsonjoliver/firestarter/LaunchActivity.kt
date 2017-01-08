@@ -9,12 +9,18 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
+import android.util.Log
+import android.widget.Toast
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import com.sampsonjoliver.firestarter.utils.TAG
 import com.sampsonjoliver.firestarter.views.main.HomeActivity
 
 class LaunchActivity : FirebaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_launch)
+        refreshRemoteConfig()
     }
 
     fun checkLocationPermissions() {
@@ -51,6 +57,24 @@ class LaunchActivity : FirebaseActivity() {
                 } else {
                     finish()
                 }
+            }
+        }
+    }
+
+    fun refreshRemoteConfig() {
+        val config = FirebaseRemoteConfig.getInstance()
+        val configSettings = FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build()
+        config.setConfigSettings(configSettings)
+        config.setDefaults(R.xml.config)
+
+        config.fetch().addOnCompleteListener (this) { task ->
+            if (task.isSuccessful) {
+                Log.d(this@LaunchActivity.TAG, "Remote Config Fetch Succeeded")
+                config.activateFetched()
+            } else {
+                Log.d(this@LaunchActivity.TAG, "Remote Config Fetch Failed")
             }
         }
     }
