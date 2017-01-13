@@ -7,6 +7,8 @@
   <dimen name="nav_header_height">160dp</dimen>
   <dimen name="fab_margin">16dp</dimen>
 
+  <dimen name="header_size">200dp</dimen>
+
   <dimen name="rowInset">12dp</dimen>
 
   <dimen name="spacingXSmall">2sp</dimen>
@@ -25,6 +27,7 @@
   <dimen name="textSizeXLarge">20sp</dimen>
   <dimen name="textSizeXxLarge">24sp</dimen>
   <dimen name="textSizeXxxLarge">28sp</dimen>
+  <dimen name="textSizeHuge">42sp</dimen>
 
   <dimen name="fontIconSmall">16sp</dimen>
   <dimen name="fontIconMedium">24sp</dimen>
@@ -41,4 +44,7 @@
   <dimen name="circleXxLarge">150dp</dimen>
   <dimen name="circleXxxLarge">180dp</dimen>
   <dimen name="circleHuge">220dp</dimen>
+
+  <dimen name="touchable">40dp</dimen>
+
 </resources>

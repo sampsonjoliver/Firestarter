@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/chat_bubble_single"
+    android:paddingTop="5dp"
+    android:paddingBottom="5dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    >
+
+    <TextView
+        android:id="@+id/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/spacingXSmall"
+        android:textColor="@color/white"
+        android:textSize="@dimen/textSizeLarge"
+        tools:text="This is a message"/>
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/messageContentImage"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginBottom="@dimen/spacingMedium"
+        android:layout_marginTop="@dimen/spacingMedium"
+        fresco:placeholderImage="@drawable/ic_menu_gallery"
+        fresco:placeholderImageScaleType="centerCrop"
+        fresco:backgroundImage="@color/dusty_gray"
+        fresco:actualImageScaleType="focusCrop"
+        fresco:fadeDuration="300"
+        />
+
+</LinearLayout>

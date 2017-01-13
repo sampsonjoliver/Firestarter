@@ -20,9 +20,11 @@ public class FontIconView extends AppCompatTextView {
     public FontIconView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        if (iconFontTypeface == null)
-            iconFontTypeface = Typeface.createFromAsset(context.getAssets(), iconFontFile);
+        if (!isInEditMode()) {
+            if (iconFontTypeface == null)
+                iconFontTypeface = Typeface.createFromAsset(context.getAssets(), iconFontFile);
 
-        setTypeface(iconFontTypeface);
+            setTypeface(iconFontTypeface);
+        }
     }
 }

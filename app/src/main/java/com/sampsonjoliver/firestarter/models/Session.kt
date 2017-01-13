@@ -1,6 +1,7 @@
 package com.sampsonjoliver.firestarter.models
 
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.database.Exclude
 import java.util.*
 
 class Session(
@@ -13,21 +14,25 @@ class Session(
         var lng: Double,
         var address: String,
         var url: String,
-        var tags: Map<String, Boolean>,
+        var tags: MutableMap<String, Boolean>,
         var startDate: Long,
         var durationMs: Long
 ) {
-    var sessionId: String? = null
-    var startDateAsDate: Date = Date()
-        get() = Date(startDate)
-        set
+    @Exclude var sessionId: String? = null
+    @Exclude var startDateAsDate: Date = Date()
+        @Exclude get() = Date(startDate)
 
-    var location: LatLng
-        get() = LatLng(lat, lng)
-        set(value) {
+    @Exclude var endDate: Long = 0
+        @Exclude get() = startDate + durationMs
+
+    @Exclude var endDateAsDate: Date = Date()
+        @Exclude get() = Date(startDate + durationMs)
+
+    @Exclude fun getLocation(): LatLng = LatLng(lat, lng)
+    @Exclude fun setLocation(value: LatLng) {
             lat = value.latitude
             lng = value.longitude
         }
 
-    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", emptyMap(), 0, 0)
+    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", mutableMapOf(), 0, 0)
 }

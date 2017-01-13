@@ -2,13 +2,21 @@ package com.sampsonjoliver.firestarter
 
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.MenuItem
 import com.sampsonjoliver.firestarter.service.SessionManager
+import com.sampsonjoliver.firestarter.utils.consume
 import com.sampsonjoliver.firestarter.views.login.LoginActivity
 
 abstract class FirebaseActivity : AppCompatActivity(),
         SessionManager.SessionAuthListener {
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            android.R.id.home -> return consume { finish() }
+        }
+        return super.onOptionsItemSelected(item)
+    }
 
     override fun onLogin() {
 
@@ -22,15 +30,13 @@ abstract class FirebaseActivity : AppCompatActivity(),
         })
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    override fun onResume() {
+        super.onResume()
         SessionManager.startSession(this, this)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
+    override fun onPause() {
+        super.onPause()
         SessionManager.stopSession()
     }
 }
