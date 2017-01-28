@@ -4,13 +4,8 @@
   <item
       android:id="@+id/action_search"
       android:title="@string/action_search"
-      android:icon="@drawable/ic_menu_share"
+      android:icon="@drawable/ic_filter_list_white_24dp"
       app:showAsAction="ifRoom"/>
-  <item
-      android:id="@+id/action_settings"
-      android:orderInCategory="100"
-      android:title="@string/action_settings"
-      app:showAsAction="never"/>
   <item
       android:id="@+id/action_logout"
       android:orderInCategory="100"

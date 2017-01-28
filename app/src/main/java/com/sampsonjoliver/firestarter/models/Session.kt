@@ -16,7 +16,8 @@ class Session(
         var url: String,
         var tags: MutableMap<String, Boolean>,
         var startDate: Long,
-        var durationMs: Long
+        var durationMs: Long,
+        var closed: Boolean
 ) {
     @Exclude var sessionId: String? = null
     @Exclude var startDateAsDate: Date = Date()
@@ -34,5 +35,5 @@ class Session(
             lng = value.longitude
         }
 
-    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", mutableMapOf(), 0, 0)
+    constructor() : this("", "", "", "", "", 0.0, 0.0, "", "", mutableMapOf(), 0, 0, false)
 }

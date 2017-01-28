@@ -23,7 +23,7 @@ object BitmapUtils {
     }
 
     fun decodeSampledBitmap(imagePath: String, reqWidth: Int, reqHeight: Int): Bitmap {
-        val path = Uri.parse(imagePath).path
+        val path = Uri.parse(imagePath).path ?: imagePath
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
         BitmapFactory.decodeFile(path, options)

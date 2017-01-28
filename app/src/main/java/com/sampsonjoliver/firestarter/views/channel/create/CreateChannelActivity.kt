@@ -35,11 +35,14 @@ import com.sampsonjoliver.firestarter.service.SessionManager
 import com.sampsonjoliver.firestarter.utils.*
 import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchPickPhotoIntent
 import com.sampsonjoliver.firestarter.utils.IntentUtils.dispatchTakePictureIntent
+import com.sampsonjoliver.firestarter.views.channel.ChannelActivity
 import com.sampsonjoliver.firestarter.views.dialogs.DatePickerDialogFragment
 import com.sampsonjoliver.firestarter.views.dialogs.FormDialog
 import com.sampsonjoliver.firestarter.views.dialogs.TimePickerDialogFragment
 import kotlinx.android.synthetic.main.activity_create_channel.*
 import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 
 class CreateChannelActivity : FirebaseActivity() {
@@ -69,18 +72,22 @@ class CreateChannelActivity : FirebaseActivity() {
         startDate.text = DateUtils.formatDateTime(this, timeInMillis, DateUtils.FORMAT_SHOW_DATE)
         startTime.text = DateUtils.formatDateTime(this, timeInMillis, DateUtils.FORMAT_SHOW_TIME)
 
-        if (!endDateSet) {
+        if (!endDateSet || timeInMillis > session.endDate) {
+            session.startDate = timeInMillis
             setEndTime(timeInMillis + currentDuration)
             endDateSet = false
         } else {
-            session.durationMs = timeInMillis - session.endDate
+            session.startDate = timeInMillis
+            session.durationMs = session.endDate - timeInMillis
         }
-        session.startDate = timeInMillis
 
         startDateSet = true
     }
 
     fun setEndTime(timeInMillis: Long) {
+        if (timeInMillis < session.startDate)
+            return
+
         endDate.text = DateUtils.formatDateTime(this, timeInMillis, DateUtils.FORMAT_SHOW_DATE)
         endTime.text = DateUtils.formatDateTime(this, timeInMillis, DateUtils.FORMAT_SHOW_TIME)
 
@@ -96,8 +103,12 @@ class CreateChannelActivity : FirebaseActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        setStartTime(Date().time)
-        setEndTime(session.startDate + 1000 * 60 * 60 * 2)
+        calendarHolder.timeInMillis = Date().time
+        calendarHolder.add(Calendar.HOUR_OF_DAY, 1)
+        calendarHolder.set(Calendar.MINUTE, 0)
+
+        setStartTime(calendarHolder.timeInMillis)
+        setEndTime(session.startDate + 1000 * 60 * 60 * 1)
         endDateSet = false
 
         startDate.setOnClickListener {
@@ -120,7 +131,7 @@ class CreateChannelActivity : FirebaseActivity() {
         startTime.setOnClickListener {
             calendarHolder.time = session.startDateAsDate
             TimePickerDialogFragment.newInstance(
-                    calendarHolder.get(Calendar.HOUR),
+                    calendarHolder.get(Calendar.HOUR_OF_DAY),
                     calendarHolder.get(Calendar.MINUTE))
                     .apply { listener = TimePickerDialog.OnTimeSetListener { timePicker, hour, minute ->
                         calendarHolder.time = session.startDateAsDate
@@ -154,7 +165,7 @@ class CreateChannelActivity : FirebaseActivity() {
         endTime.setOnClickListener {
             calendarHolder.time = session.endDateAsDate
             TimePickerDialogFragment.newInstance(
-                    calendarHolder.get(Calendar.HOUR),
+                    calendarHolder.get(Calendar.HOUR_OF_DAY),
                     calendarHolder.get(Calendar.MINUTE))
                     .apply { listener = TimePickerDialog.OnTimeSetListener { timePicker, hour, minute ->
                         calendarHolder.time = session.endDateAsDate
@@ -241,10 +252,31 @@ class CreateChannelActivity : FirebaseActivity() {
                 resultCode.whenEqual(Activity.RESULT_OK) {
                     data?.data?.run {
                         photoUploadPending = true
-                        currentPhotoPath = this.toString()
+                        val filePath = try {
+                            // Read the files from the content provider, then copy them to app temp files
+                            val inputStream = contentResolver.openInputStream(this)
+                            val file = File.createTempFile(this.lastPathSegment, null, cacheDir)
+                            val buffer = ByteArray(4 * 1024)
+                            val output = FileOutputStream(file)
+
+                            ({ inputStream.read(buffer) }).doWhile({ it != -1 }) {
+                                output.write(buffer, 0, it)
+                            }
+
+                            output.flush()
+                            output.close()
+
+                            file.absolutePath
+                        } catch (e: Exception) {
+                            Log.e(TAG, e.message, e)
+                            null
+                        }
+
+                        currentPhotoPath = filePath
                     }
                 }
-                banner.setImageURI(currentPhotoPath ?: "")
+                val uri = Uri.fromFile(File(currentPhotoPath ?: ""))
+                banner.setImageURI(uri)
             }
             IntentUtils.REQUEST_IMAGE_CAPTURE -> {
                 photoUploadPending = false
@@ -267,6 +299,8 @@ class CreateChannelActivity : FirebaseActivity() {
     fun saveChannel() {
         val progressDialog = ProgressDialog(this@CreateChannelActivity)
         progressDialog.setMessage(getString(R.string.creating_channel))
+        progressDialog.setCancelable(false)
+        progressDialog.setCanceledOnTouchOutside(false)
         progressDialog.show()
 
         if (photoUploadPending) {
@@ -293,15 +327,25 @@ class CreateChannelActivity : FirebaseActivity() {
                             progressDialog.setMessage(getString(R.string.creating_channel))
                             session.bannerUrl = photoIt.downloadUrl.toString()
                             FirebaseService.createSession(session,
-                                    { finish() },
-                                    { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
+                                    onFinish = {
+                                        finish()
+                                        startActivity(Intent(this@CreateChannelActivity, ChannelActivity::class.java).apply {
+                                            putExtra(ChannelActivity.EXTRA_SESSION_ID, it)
+                                        })
+                                    },
+                                    onError = { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
                             )
                         }
             }
         } else {
             FirebaseService.createSession(session,
-                    { finish() },
-                    { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
+                    onFinish = {
+                        finish()
+                        startActivity(Intent(this@CreateChannelActivity, ChannelActivity::class.java).apply {
+                            putExtra(ChannelActivity.EXTRA_SESSION_ID, it)
+                        })
+                    },
+                    onError = { Snackbar.make(toolbar, R.string.create_session_save_error, Snackbar.LENGTH_LONG).show() }
             )
         }
     }

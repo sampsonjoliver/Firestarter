@@ -42,6 +42,7 @@
   <string name="leave">Leave</string>
   <string name="close_session">Close Session</string>
   <string name="create_session_save_error">An error occurred creating the session</string>
+  <string name="generic_error">An error occurred while performing that action</string>
   <string name="create_session_tag_title">Edit Tag</string>
   <string name="edit_session_tag_title">Add tag</string>
   <string name="create_session_tag_hint">Tag name</string>
@@ -59,4 +60,5 @@
   <string name="take_photo">Take Photo</string>
   <string name="upload_photo">Upload Photo</string>
   <string name="clear">Clear</string>
+  <string name="session_finished">Finished</string>
 </resources>

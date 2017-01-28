@@ -40,8 +40,9 @@ object IntentUtils {
     }
 
     fun dispatchPickPhotoIntent(activity: Activity) {
-        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        activity.startActivityForResult(galleryIntent, REQUEST_IMAGE_PICKER)
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "image/*"
+        activity.startActivityForResult(intent, REQUEST_IMAGE_PICKER)
     }
 
     fun dispatchTakePictureIntent(activity: Activity): String? {

@@ -2,8 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto">
   <item android:id="@+id/menu_leave"
-        android:title="@string/leave"
-        app:showAsAction="collapseActionView"
+      android:title="@string/leave"
+      app:showAsAction="collapseActionView"
+      />
+  <item android:id="@+id/menu_close"
+      android:title="@string/close_session"
+      app:showAsAction="collapseActionView"
       />
   <item android:id="@+id/menu_content"
         android:title="@string/shared_content"

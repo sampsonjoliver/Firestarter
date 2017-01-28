@@ -138,11 +138,15 @@ class HomeRecyclerAdapter(val listener: OnSessionClickedListener) : RecyclerView
                 itemView.distance.text = DistanceUtils.formatDistance(LatLng(location?.latitude ?: 0.0, location?.longitude ?: 0.0), session.getLocation())
             }
 
-            itemView.time.text = DateUtils.getRelativeTimeSpanString(
-                    session.startDateAsDate.time ?: Date().time,
-                    System.currentTimeMillis(),
-                    DateUtils.MINUTE_IN_MILLIS,
-                    DateUtils.FORMAT_ABBREV_RELATIVE)
+            itemView.time.text = if (session.closed) {
+                itemView.resources.getString(R.string.session_finished)
+            } else {
+                DateUtils.getRelativeTimeSpanString(
+                        session.startDateAsDate.time ?: Date().time,
+                        System.currentTimeMillis(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                        DateUtils.FORMAT_ABBREV_RELATIVE)
+            }
 
             itemView.setOnClickListener { listener.onSessionClicked(session) }
         }

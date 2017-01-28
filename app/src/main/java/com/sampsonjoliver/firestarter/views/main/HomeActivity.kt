@@ -423,7 +423,6 @@ class HomeActivity : LocationAwareActivity(),
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            R.id.action_settings -> return true
             R.id.action_logout -> return consume { logout() }
             R.id.action_search -> return consume { showFiltersDialog() }
             else -> return super.onOptionsItemSelected(item)

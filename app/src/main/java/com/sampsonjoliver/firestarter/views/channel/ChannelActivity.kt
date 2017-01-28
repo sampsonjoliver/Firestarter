@@ -176,19 +176,25 @@ class ChannelActivity : LocationAwareActivity(),
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_channel, menu)
         menu?.findItem(R.id.menu_leave)?.isVisible = isSessionOwner.not()
+        menu?.findItem(R.id.menu_close)?.isVisible = isSessionOwner
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menu?.findItem(R.id.menu_leave)?.isVisible = isSessionOwner.not()
+        menu?.findItem(R.id.menu_close)?.isVisible = isSessionOwner
         return super.onPrepareOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
             R.id.menu_leave -> {
-                sessionId?.let { FirebaseService.updateSessionSubscription(it, true, { finish() }) }
-                return true
+                return consume { sessionId?.let { FirebaseService.updateSessionSubscription(it, true, { finish() }) } }
+            }
+            R.id.menu_close -> {
+                return consume { sessionId?.let { FirebaseService.closeSession(it, onFinish = { finish() }, onError = {
+                    Snackbar.make(toolbar, getString(R.string.generic_error), Snackbar.LENGTH_SHORT).show()
+                }) } }
             }
             R.id.menu_content -> { return consume {
                 startActivity(Intent(this@ChannelActivity, GalleryActivity::class.java).apply {

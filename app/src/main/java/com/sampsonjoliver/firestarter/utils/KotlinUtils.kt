@@ -16,6 +16,11 @@ import com.google.android.gms.maps.model.Marker
 val <T : Any> T.TAG: String
     get() = this.javaClass.name
 
+fun <T> (() -> T).doWhile(cond: (t1: T) -> Boolean, block: (t1: T) -> Unit) {
+    var t: T? = null
+    while (this.invoke().let { t = it; cond(it) }) block(t!!)
+}
+
 fun ViewGroup.inflate(@LayoutRes layoutId: Int, attachToParent: Boolean): View {
     return LayoutInflater.from(this.context).inflate(layoutId, this, attachToParent)
 }

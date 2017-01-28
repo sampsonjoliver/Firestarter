@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.app.TimePickerDialog
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
+import android.text.format.DateFormat
 
 class TimePickerDialogFragment : DialogFragment() {
     companion object {
@@ -24,7 +25,7 @@ class TimePickerDialogFragment : DialogFragment() {
     val minute by lazy { arguments.getInt(ARG_MINUTE) }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val picker = TimePickerDialog(activity, listener, hour, minute, false)
+        val picker = TimePickerDialog(activity, listener, hour, minute, DateFormat.is24HourFormat(context))
 
         return picker
     }

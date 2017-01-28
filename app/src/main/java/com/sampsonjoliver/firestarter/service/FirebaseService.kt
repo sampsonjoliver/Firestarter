@@ -51,6 +51,26 @@ object FirebaseService {
         geoFire.getLocation(sessionId, listener)
     }
 
+    fun closeSession(sessionId: String, onFinish: () -> Unit = {}, onError: () -> Unit = {}) {
+        FirebaseService.getReference(References.Sessions)
+                .child(sessionId).child("closed")
+                .setValue(true, DatabaseReference.CompletionListener { databaseError, databaseReference ->
+                    if (databaseError != null) {
+                        onError()
+                    } else {
+                        val ref = FirebaseDatabase.getInstance().getReference(References.GeoSessions)
+                        val geoFire = GeoFire(ref)
+                        geoFire.removeLocation(sessionId, { key, databaseError ->
+                            if (databaseError != null) {
+                                onError()
+                            } else {
+                                onFinish()
+                            }
+                        })
+                    }
+                })
+    }
+
     fun createSession(session: Session, onFinish: (sessionId: String) -> Unit = {}, onError: () -> Unit = {}) {
         FirebaseService.getReference(References.Sessions)
                 .push()
@@ -83,6 +103,16 @@ object FirebaseService {
                                 .child(databaseReference.key)
                                 .child(References.NumUsers)
                                 .setValue(0)
+
+                        FirebaseService.getReference(References.SessionSubscriptions)
+                                .child(databaseReference.key)
+                                .child(SessionManager.getUid())
+                                .setValue(true)
+
+                        FirebaseService.getReference(References.UserSubscriptions)
+                                .child(SessionManager.getUid())
+                                .child(databaseReference.key)
+                                .setValue(true)
 
                     } else {
                         onError()
