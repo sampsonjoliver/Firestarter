@@ -20,7 +20,7 @@
       android:layout_toRightOf="@id/logo"
       android:layout_alignBottom="@id/logo"
       android:textSize="@dimen/textSizeHuge"
-      android:text="@string/firestarter"
+      android:text="@string/icebreaker"
       android:layout_gravity="center_vertical" />
 
 </RelativeLayout>
