@@ -138,7 +138,7 @@ class HomeActivity : LocationAwareActivity(),
 
         override fun onKeyEntered(key: String?, location: GeoLocation?) {
             googleMap?.run {
-                if (key != null && (adapter.subscribedSessions.any { it.sessionId == key } || adapter.nearbySessions.any { it.sessionId == key })) {
+                if (key != null) {
                     addMapMarker(key, location.latLng())
 
                     FirebaseService.getReference(References.Sessions)

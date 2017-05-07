@@ -65,7 +65,7 @@ class ChannelActivity : LocationAwareActivity(),
         }
 
         override fun onDataChange(p0: DataSnapshot?) {
-            val numSubscribers = p0?.getValue(Int::class.java)
+            val numSubscribers = p0?.getValue(Int::class.java).orElse(0)
             users.text = numSubscribers.toString()
         }
     }

@@ -46,6 +46,10 @@ var View.appear: Boolean
 fun Any?.exists():Boolean = this != null
 
 inline fun consume(func: () -> Unit): Boolean { func(); return true }
+inline fun doAndReturnTrue(func: () -> Unit): Boolean { func(); return true }
+inline fun doAndReturnFalse(func: () -> Unit): Boolean { func(); return false }
+
+fun <T> T?.orElse(altValue: T) = this ?: altValue
 
 inline fun <T> T.whenEqual(that: T, block: (T) -> Unit) {
     if (this == that) block.invoke(this)
